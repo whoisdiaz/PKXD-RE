@@ -1,5 +1,39 @@
 # PK XD — engenharia reversa
 
+## Etapa 1: lobby local para 1.38.4
+
+O primeiro módulo aceita o protocolo `0.2.49` na rota real
+`POST /lobby/allocation` e devolve uma alocação local. Funciona com Python e
+biblioteca padrão, sem dependências de pip.
+
+No Termux, na raiz deste projeto:
+
+```sh
+pkg install python curl
+python -m pkxd_server --port 8080 --game-port 7000
+```
+
+Em outra sessão:
+
+```sh
+curl -sS http://127.0.0.1:8080/health
+curl -sS http://127.0.0.1:8080/lobby/allocation \
+  -H 'Content-Type: application/json' \
+  --data '{"userToken":"local-test","gameServerProtocolVersion":"0.2.49","isPrivate":false}'
+```
+
+O módulo abre somente o lobby HTTP. A porta de jogo anunciada (`7000` no
+exemplo), as sessões e a entrada no mundo pertencem às próximas partes. A
+integração no APK 1.38.4 ainda não foi testada; o APK original não passa a usar
+o servidor local automaticamente. O pedido do cliente leva o protocolo, não a
+versão do aplicativo.
+
+[Contrato reconstruído, redirecionamento de metadata e limites da etapa](docs/version_1_38_4.md).
+
+Testes: `python -m unittest discover -s tests -v`.
+
+## Dump e estudo inicial
+
 [Baixar o dump IL2CPP (ZIP, 24,7 MiB)](https://github.com/whoisdiaz/PKXD-RE/raw/refs/heads/main/pkxd-dump.zip)
 
 Dump gerado com Il2CppDumper v6.7.46 a partir de `global-metadata.dat` v29 e
@@ -34,5 +68,4 @@ rg -n 'class LoginRequest|class LoginResponse' dump.cs
 Para conferir o checksum, baixe também
 [`pkxd-dump.zip.sha256`](pkxd-dump.zip.sha256) na mesma pasta do ZIP.
 
-O servidor será implementado por partes, conforme solicitado pelo usuário. Esta publicação contém o dump e a análise inicial; não contém uma
-implementação do servidor.
+As demais partes do servidor serão implementadas conforme solicitadas pelo usuário.

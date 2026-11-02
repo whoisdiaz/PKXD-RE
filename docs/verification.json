@@ -1,0 +1,46 @@
+{
+  "automated_tests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 16,
+    "failed": 0,
+    "python": "3.12.14",
+    "platform": "Linux x86_64; Termux instructions not executed on Android"
+  },
+  "cli_smoke": {
+    "health": {
+      "status": "ok",
+      "targetAppVersion": "1.38.4",
+      "acceptedGameServerProtocolVersion": "0.2.49",
+      "gameTransportImplemented": false
+    },
+    "allocation": {
+      "successful": true,
+      "failureReason": "",
+      "failureDescription": "",
+      "gameServerId": "local-1.38.4",
+      "gameServerAddress": "127.0.0.1",
+      "gameServerHosts": [
+        "127.0.0.1"
+      ],
+      "gameServerPort": 7000,
+      "gameServerUdpPort": 0,
+      "gameServerEngine": "ToxicBird",
+      "gameServerType": "DEFAULT",
+      "gameServerOwnerId": ""
+    },
+    "cli_exit_code": 0,
+    "client_on_android_tested": false
+  },
+  "metadata_redirect": {
+    "input_sha256": "f2e909fe0d8668da323805d2a8cef2d69068b6f114322aedd0d2b3452a24ffde",
+    "output_sha256": "430b63f12b3b151914840253a8ce86c263d7730d286280bd115c77170833c133",
+    "structural_validation_passed": true,
+    "modified_literal_indices": [
+      19283,
+      19284
+    ],
+    "literal_table_count": 23281,
+    "other_literal_values_unchanged": true
+  },
+  "android_client_validation": "Not executed: the matching APK and its network/signing configuration are not available."
+}
