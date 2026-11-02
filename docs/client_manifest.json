@@ -1,0 +1,17 @@
+{
+  "input_sha256": "af6bf563296a5871289ac90c58da422a1e2b4d75e6db6ce043f0dc7ee7dfa137",
+  "input_format": "Android binary XML",
+  "input_size_bytes": 47072,
+  "package": "com.movile.playkids.pkxd",
+  "version_name": "1.38.4",
+  "version_code": 10370,
+  "min_sdk": 22,
+  "target_sdk": 33,
+  "internet_permission": true,
+  "application_class": "com.movile.playkids.pkxd.base.PlaykidsXDApplication",
+  "uses_cleartext_traffic_explicit": null,
+  "network_security_config_resource": "@0x7f150002",
+  "cleartext_policy_result": "Unknown until the referenced network-security XML is inspected; a missing usesCleartextTraffic attribute does not resolve an explicit networkSecurityConfig.",
+  "next_input": "resources.arsc and the res/xml* directories from the same APK; the resource ID cannot be reliably mapped to a filename from this manifest alone.",
+  "android_client_executed": false
+}

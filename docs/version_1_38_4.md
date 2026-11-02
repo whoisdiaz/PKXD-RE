@@ -128,12 +128,26 @@ sha256sum output/global-metadata.local.dat
 Para o jogo ler essa alteração, ela precisa ser incorporada ao APK correto no
 lugar de `global-metadata.dat`; não basta executar o script no Termux. Um APK
 modificado também precisa ser empacotado e assinado corretamente. Essa
-integração não foi executada: o APK/manifesto não foi fornecido. Não se deve
+integração não foi executada: o APK completo não foi fornecido. O manifesto
+recebido confirma a versão, mas referencia outro XML para a política de rede. Não se deve
 desinstalar o aplicativo existente nem substituir dados sem preservá-los.
 
-O exemplo usa HTTP em loopback. Se a política de rede desse APK bloquear tráfego
-sem TLS, será necessário definir uma configuração local compatível e verificar
-a política no manifesto; o utilitário não desativa validação de certificados.
+O manifesto recebido declara `com.movile.playkids.pkxd`, `versionName=1.38.4`,
+`versionCode=10370`, `minSdkVersion=22`, `targetSdkVersion=33` e a permissão
+`android.permission.INTERNET`. O atributo `usesCleartextTraffic` não está
+explicitamente presente. Há uma referência `networkSecurityConfig=@0x7f150002`;
+portanto, a política de HTTP precisa ser conferida no XML de rede referenciado,
+não inferida apenas do target SDK ou da ausência de um atributo.
+
+Para resolver esse recurso sem o APK inteiro, são necessários `resources.arsc`
+e os diretórios `res/xml*` do mesmo APK. Esses arquivos geralmente são pequenos
+e podem ser enviados juntos em um ZIP. Não se deve adivinhar o nome desse XML
+em um manifesto compilado apenas pelo ID numérico. Os fatos extraídos estão em
+`client_manifest.json`.
+
+O exemplo usa HTTP em loopback. Se o XML bloquear tráfego sem TLS, será
+necessário preparar uma exceção local preservando a política dos demais
+destinos; o utilitário de metadata não desativa validação de certificados.
 `127.0.0.1` só aponta para o Termux quando jogo e servidor estão no mesmo aparelho.
 
 ## Executar e verificar
@@ -166,8 +180,9 @@ Para encerrar o lobby, use Ctrl+C.
   metadata: 120 imagens, 21.887 tipos, 146.636 métodos, todas as tabelas íntegras.
 - Uma comparação de todos os 23.281 literais encontrou mudanças somente nos
   índices 19283 e 19284.
-- O cliente Android não foi executado e a política de rede/assinatura do APK
-  não foi inspecionada. Não se declara a versão liberada no aparelho, o login
+- O manifesto confirma a versão 1.38.4 e o código 10370. O cliente Android não
+  foi executado; a política de rede delegada ao XML e a assinatura do APK ainda
+  não foram inspecionadas. Não se declara a versão liberada no aparelho, o login
   concluído nem entrada no mundo a partir desses testes de backend.
 
 Testes reproduzíveis na raiz do repositório:

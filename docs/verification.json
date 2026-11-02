@@ -42,5 +42,15 @@
     "literal_table_count": 23281,
     "other_literal_values_unchanged": true
   },
-  "android_client_validation": "Not executed: the matching APK and its network/signing configuration are not available."
+  "android_client_validation": "Not executed. Matching 1.38.4 manifest inspected; referenced network-security XML and APK packaging/signing configuration remain unavailable.",
+  "manifest_inspection": {
+    "input_sha256": "af6bf563296a5871289ac90c58da422a1e2b4d75e6db6ce043f0dc7ee7dfa137",
+    "package": "com.movile.playkids.pkxd",
+    "version_name": "1.38.4",
+    "version_code": 10370,
+    "min_sdk": 22,
+    "target_sdk": 33,
+    "internet_permission": true,
+    "network_security_config_resource": "@0x7f150002"
+  }
 }
