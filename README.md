@@ -2,17 +2,24 @@
 
 ## Etapa 1: lobby local para 1.38.4
 
-O primeiro módulo aceita o protocolo `0.2.49` na rota real
-`POST /lobby/allocation` e devolve uma alocação local. Funciona com Python e
-biblioteca padrão, sem dependências de pip.
+O primeiro módulo permite o protocolo `0.2.49` na rota real
+`POST /lobby/allocation` e devolve uma alocação local. A versão **1.38.4** já
+vem habilitada em [`config/versions.json`](config/versions.json).
+Funciona com Python e biblioteca padrão, sem dependências de pip.
 
-No Termux, na raiz deste projeto:
+Para instalar no Termux:
 
 ```sh
-pkg install python curl
-python -m pkxd_server --port 8080 --game-port 7000
+pkg install git python curl
+git clone --depth 1 https://github.com/whoisdiaz/PKXD-RE.git
+cd PKXD-RE
+python server.py
 ```
 
+Se já tiver o repositório, execute `git pull --ff-only` na pasta dele para
+atualizar. O início por `python -m pkxd_server` também é suportado.
+
+O servidor escuta em `127.0.0.1:8080`. Deixe essa sessão aberta.
 Em outra sessão:
 
 ```sh
@@ -21,6 +28,17 @@ curl -sS http://127.0.0.1:8080/lobby/allocation \
   -H 'Content-Type: application/json' \
   --data '{"userToken":"local-test","gameServerProtocolVersion":"0.2.49","isPrivate":false}'
 ```
+
+Para o cliente consultar esse lobby, use o
+[metadata já redirecionado para teste local](client/README.md) no APK
+correspondente. Não é necessário enviar o APK inteiro para essa primeira
+tentativa. A configuração de rede será investigada se o teste apresentar
+um bloqueio de HTTP.
+
+Para desabilitar a versão, altere `enabled` para `false` em
+`config/versions.json` e reinicie o servidor. A requisição nativa informa o
+protocolo, então outras builds que compartilhem `0.2.49` não podem ser
+distintas por esse pedido sozinho.
 
 O módulo abre somente o lobby HTTP. A porta de jogo anunciada (`7000` no
 exemplo), as sessões e a entrada no mundo pertencem às próximas partes. A

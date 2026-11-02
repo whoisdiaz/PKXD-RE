@@ -1,7 +1,7 @@
 {
   "automated_tests": {
     "command": "python -m unittest discover -s tests -v",
-    "passed": 16,
+    "passed": 23,
     "failed": 0,
     "python": "3.12.14",
     "platform": "Linux x86_64; Termux instructions not executed on Android"
@@ -42,7 +42,7 @@
     "literal_table_count": 23281,
     "other_literal_values_unchanged": true
   },
-  "android_client_validation": "Not executed. Matching 1.38.4 manifest inspected; referenced network-security XML and APK packaging/signing configuration remain unavailable.",
+  "android_client_validation": "Not executed. Matching 1.38.4 manifest inspected. Start with the local lobby and redirected metadata; request network-security resources only if the test exposes a relevant network-policy error.",
   "manifest_inspection": {
     "input_sha256": "af6bf563296a5871289ac90c58da422a1e2b4d75e6db6ce043f0dc7ee7dfa137",
     "package": "com.movile.playkids.pkxd",
@@ -52,5 +52,74 @@
     "target_sdk": 33,
     "internet_permission": true,
     "network_security_config_resource": "@0x7f150002"
+  },
+  "cli_permission_smoke": [
+    {
+      "versionEnabled": true,
+      "health": {
+        "status": "ok",
+        "targetAppVersion": "1.38.4",
+        "versionEnabled": true,
+        "acceptedGameServerProtocolVersion": "0.2.49",
+        "gameTransportImplemented": false
+      },
+      "allocation": {
+        "successful": true,
+        "failureReason": "",
+        "failureDescription": "",
+        "gameServerId": "local-1.38.4",
+        "gameServerAddress": "127.0.0.1",
+        "gameServerHosts": [
+          "127.0.0.1"
+        ],
+        "gameServerPort": 7000,
+        "gameServerUdpPort": 0,
+        "gameServerEngine": "ToxicBird",
+        "gameServerType": "DEFAULT",
+        "gameServerOwnerId": ""
+      },
+      "cli_exit_code": 0,
+      "run_from_outside_repository": true
+    },
+    {
+      "versionEnabled": false,
+      "health": {
+        "status": "ok",
+        "targetAppVersion": "1.38.4",
+        "versionEnabled": false,
+        "acceptedGameServerProtocolVersion": null,
+        "gameTransportImplemented": false
+      },
+      "allocation": {
+        "successful": false,
+        "failureReason": "GAME_SERVER_PROTOCOL_VERSION_MISMATCH",
+        "failureDescription": "This deployment has disabled the configured version."
+      },
+      "cli_exit_code": 0,
+      "run_from_outside_repository": true
+    }
+  ],
+  "version_permission_config": {
+    "path": "config/versions.json",
+    "targetAppVersion": "1.38.4",
+    "enabled": true,
+    "gameServerProtocolVersion": "0.2.49",
+    "restart_required_after_edit": true
+  },
+  "client_bundle": {
+    "appVersion": "1.38.4",
+    "versionCode": 10370,
+    "gameServerProtocolVersion": "0.2.49",
+    "lobbyUrl": "http://127.0.0.1:8080",
+    "metadataInputSha256": "f2e909fe0d8668da323805d2a8cef2d69068b6f114322aedd0d2b3452a24ffde",
+    "metadataOutputSha256": "430b63f12b3b151914840253a8ce86c263d7730d286280bd115c77170833c133",
+    "modifiedLiteralIndices": [
+      19283,
+      19284
+    ],
+    "archive": "pkxd-1.38.4-metadata-local.zip",
+    "archiveSha256": "9b3fe988523c2890359098377bd8de8ba0b1d9a81f1da2853c787853bb131b93",
+    "archiveBytes": 4790575,
+    "androidClientTested": false
   }
 }

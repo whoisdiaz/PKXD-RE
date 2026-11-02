@@ -12,6 +12,7 @@
   "uses_cleartext_traffic_explicit": null,
   "network_security_config_resource": "@0x7f150002",
   "cleartext_policy_result": "Unknown until the referenced network-security XML is inspected; a missing usesCleartextTraffic attribute does not resolve an explicit networkSecurityConfig.",
-  "next_input": "resources.arsc and the res/xml* directories from the same APK; the resource ID cannot be reliably mapped to a filename from this manifest alone.",
-  "android_client_executed": false
+  "android_client_executed": false,
+  "first_test": "Run the local lobby and use the redirected metadata. Additional resource files are not required before this first test.",
+  "optional_diagnostics_if_cleartext_fails": "If the client reports a cleartext-policy error, resources.arsc and res/xml* from the same APK can resolve and inspect network-security resource @0x7f150002."
 }

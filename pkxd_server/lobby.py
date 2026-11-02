@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
-from . import SUPPORTED_PROTOCOL, TARGET_APP_VERSION
+from .version_policy import VersionPolicy
 
 LOG = logging.getLogger(__name__)
 MAX_BODY_BYTES = 64 * 1024
@@ -36,13 +36,15 @@ def failure(reason, description):
     return {"successful": False, "failureReason": reason, "failureDescription": description}
 
 
-def allocate(payload, destination):
+def allocate(payload, destination, policy=None):
     """Return an HTTP status and a PlayerAllocationResponse-compatible object.
 
     The native request carries a protocol version, not an APK appVersion. Builds
     sharing protocol 0.2.49 cannot be distinguished by this request alone.
     userToken is treated as opaque input here; authentication is a later stage.
     """
+    if policy is None:
+        policy = VersionPolicy()
     if not isinstance(payload, dict):
         return 400, failure("INVALID_REQUEST", "Expected a JSON object.")
     token = payload.get("userToken")
@@ -54,17 +56,19 @@ def allocate(payload, destination):
         return 400, failure("INVALID_REQUEST", "Expected a gameServerProtocolVersion string.")
     if type(private) is not bool:
         return 400, failure("INVALID_REQUEST", "Expected an isPrivate boolean.")
-    if protocol != SUPPORTED_PROTOCOL:
+    if not policy.enabled or protocol != policy.protocol:
         # The recovered client first requires a nonempty 2xx HTTP response, then
         # reads successful/failureReason. HTTP 426 would bypass that branch.
-        return 200, failure(PROTOCOL_MISMATCH, f"Supported game protocol: {SUPPORTED_PROTOCOL}.")
+        description = (f"Supported game protocol: {policy.protocol}." if policy.enabled
+                       else "This deployment has disabled the configured version.")
+        return 200, failure(PROTOCOL_MISMATCH, description)
     if private or "destinationRoomId" in payload or "destinationUserId" in payload:
         return 400, failure("UNSUPPORTED_ALLOCATION", "This stage supports default-world allocation only.")
     return 200, {
         "successful": True,
         "failureReason": "",
         "failureDescription": "",
-        "gameServerId": f"local-{TARGET_APP_VERSION}",
+        "gameServerId": f"local-{policy.app_version}",
         "gameServerAddress": destination.host,
         "gameServerHosts": [destination.host],
         "gameServerPort": destination.tcp_port,
@@ -78,8 +82,9 @@ def allocate(payload, destination):
 class LobbyServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address, destination):
+    def __init__(self, address, destination, policy=None):
         self.destination = destination
+        self.policy = policy if policy is not None else VersionPolicy()
         super().__init__(address, LobbyHandler)
 
 
@@ -92,7 +97,9 @@ class LobbyHandler(BaseHTTPRequestHandler):
 
     def log_request(self, code="-", size="-"):
         # Do not record tokens, bodies, or query parameters.
-        LOG.info("%s status=%s", self.command, code)
+        path = self.path.partition("?")[0]
+        route = path if path in (ALLOCATION_PATH, "/health") else "unknown-endpoint"
+        LOG.info("%s %s status=%s", self.command, route, code)
 
     def send_json(self, status, payload):
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -110,8 +117,9 @@ class LobbyHandler(BaseHTTPRequestHandler):
         # Local diagnostic endpoint, not a recovered game API.
         self.send_json(200, {
             "status": "ok",
-            "targetAppVersion": TARGET_APP_VERSION,
-            "acceptedGameServerProtocolVersion": SUPPORTED_PROTOCOL,
+            "targetAppVersion": self.server.policy.app_version,
+            "versionEnabled": self.server.policy.enabled,
+            "acceptedGameServerProtocolVersion": self.server.policy.protocol if self.server.policy.enabled else None,
             "gameTransportImplemented": False,
         })
 
@@ -147,5 +155,5 @@ class LobbyHandler(BaseHTTPRequestHandler):
         except TimeoutError:
             self.send_json(408, failure("INVALID_REQUEST", "Request body timed out."))
             return
-        status, response = allocate(payload, self.server.destination)
+        status, response = allocate(payload, self.server.destination, self.server.policy)
         self.send_json(status, response)

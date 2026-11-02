@@ -1,0 +1,6 @@
+{
+  "1.38.4": {
+    "enabled": true,
+    "gameServerProtocolVersion": "0.2.49"
+  }
+}

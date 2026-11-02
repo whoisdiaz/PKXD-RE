@@ -4,7 +4,25 @@
 
 Implementado um lobby HTTP local com a rota efetivamente reconstruída do cliente:
 `POST /lobby/allocation`. O protocolo aceito é `0.2.49`, presente nos arquivos
-enviados para o projeto. `1.38.4` é a versão do aplicativo indicada pelo usuário.
+enviados para o projeto. O manifesto recebido confirma `1.38.4` como versão do
+aplicativo, com código `10370`.
+
+A permissão é configurada em `config/versions.json`:
+
+```json
+{
+  "1.38.4": {
+    "enabled": true,
+    "gameServerProtocolVersion": "0.2.49"
+  }
+}
+```
+
+`enabled: true` permite a alocação com esse protocolo; `false` devolve a
+incompatibilidade de protocolo no contrato do cliente. O arquivo é lido na
+inicialização: reinicie o servidor após alterá-lo. A configuração do exemplo
+já está habilitada. `--version-config /caminho/versions.json` permite usar
+outra cópia do arquivo sem editar o código.
 
 O backend aceita uma alocação genérica desse protocolo e devolve o destino
 configurado. O módulo não inicia TCP/UDP de gameplay, não autentica sessões e
@@ -136,14 +154,15 @@ O manifesto recebido declara `com.movile.playkids.pkxd`, `versionName=1.38.4`,
 `versionCode=10370`, `minSdkVersion=22`, `targetSdkVersion=33` e a permissão
 `android.permission.INTERNET`. O atributo `usesCleartextTraffic` não está
 explicitamente presente. Há uma referência `networkSecurityConfig=@0x7f150002`;
-portanto, a política de HTTP precisa ser conferida no XML de rede referenciado,
-não inferida apenas do target SDK ou da ausência de um atributo.
+portanto, a política efetiva permanece desconhecida sem esse XML. Isso não
+comprova um bloqueio: o primeiro teste pode funcionar sem alteração do manifesto.
 
-Para resolver esse recurso sem o APK inteiro, são necessários `resources.arsc`
-e os diretórios `res/xml*` do mesmo APK. Esses arquivos geralmente são pequenos
-e podem ser enviados juntos em um ZIP. Não se deve adivinhar o nome desse XML
-em um manifesto compilado apenas pelo ID numérico. Os fatos extraídos estão em
-`client_manifest.json`.
+Essa análise não é pré-requisito para o primeiro teste com as URLs alteradas.
+Primeiro inicie o lobby e teste o metadata disponibilizado em
+[`client/README.md`](../client/README.md). Somente se houver erro de política de
+HTTP, investigue o XML de rede. Nesse diagnóstico, `resources.arsc` e os
+arquivos `res/xml*` permitem resolver o ID sem precisar do APK inteiro. Os fatos
+já extraídos estão em `client_manifest.json`.
 
 O exemplo usa HTTP em loopback. Se o XML bloquear tráfego sem TLS, será
 necessário preparar uma exceção local preservando a política dos demais
@@ -154,10 +173,11 @@ destinos; o utilitário de metadata não desativa validação de certificados.
 
 ```sh
 pkg install python curl
-python -m pkxd_server --port 8080 --game-port 7000
+python server.py
 ```
 
-`--game-port 7000` define o destino anunciado para a futura etapa de transporte.
+A porta de jogo padrão é `7000`; `--game-port` permite configurar esse destino.
+Ela é anunciada para a futura etapa de transporte.
 Não abre essa porta. O servidor desta etapa escuta HTTP em `127.0.0.1:8080`.
 Em outra sessão do Termux:
 
@@ -173,9 +193,12 @@ Para encerrar o lobby, use Ctrl+C.
 
 ## Validação executada e limite atual
 
-- 16 testes de HTTP/contrato e alteração de metadata passaram em Python 3.12.14.
-- A entrada por `python -m pkxd_server` foi iniciada, recebeu GET de saúde e POST
-  de alocação, e encerrou com código 0 após SIGINT.
+- 23 testes de HTTP/contrato, permissão configurável e alteração de metadata
+  passaram em Python 3.12.14.
+- A entrada por `python server.py` foi testada com a versão habilitada e
+  desabilitada, recebeu GET de saúde e POST de alocação, e encerrou com código 0
+  após SIGINT nos dois casos. O teste também executou o script a partir de outra
+  pasta para conferir o caminho da configuração.
 - A cópia modificada real passou pela validação estrutural independente do
   metadata: 120 imagens, 21.887 tipos, 146.636 métodos, todas as tabelas íntegras.
 - Uma comparação de todos os 23.281 literais encontrou mudanças somente nos
@@ -190,3 +213,16 @@ Testes reproduzíveis na raiz do repositório:
 ```sh
 python -m unittest discover -s tests -v
 ```
+
+## Referência fornecida: FreeFireServer
+
+Foi inspecionado o repositório
+https://github.com/soneca7/FreeFireServer no commit
+`b6812972eba2adb69b629c7f0b17b689a725617c`, especialmente
+`src/routes/version.js` e `src/apps/liveApp.js`. Ele publica `GET /live/ver.php`
+com `remote_version`, `is_server_open` e `server_url` para seu cliente. A consulta
+foi de leitura; seu servidor e seus scripts não foram executados.
+
+A etapa do PK XD usa o caminho e os campos reconstruídos do binário deste
+projeto. A configuração local `enabled` é um controle do nosso lobby e não
+um campo que se presume existir no pedido do PK XD.

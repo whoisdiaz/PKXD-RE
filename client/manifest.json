@@ -1,0 +1,16 @@
+{
+  "appVersion": "1.38.4",
+  "versionCode": 10370,
+  "gameServerProtocolVersion": "0.2.49",
+  "lobbyUrl": "http://127.0.0.1:8080",
+  "metadataInputSha256": "f2e909fe0d8668da323805d2a8cef2d69068b6f114322aedd0d2b3452a24ffde",
+  "metadataOutputSha256": "430b63f12b3b151914840253a8ce86c263d7730d286280bd115c77170833c133",
+  "modifiedLiteralIndices": [
+    19283,
+    19284
+  ],
+  "archive": "pkxd-1.38.4-metadata-local.zip",
+  "archiveSha256": "9b3fe988523c2890359098377bd8de8ba0b1d9a81f1da2853c787853bb131b93",
+  "archiveBytes": 4790575,
+  "androidClientTested": false
+}
