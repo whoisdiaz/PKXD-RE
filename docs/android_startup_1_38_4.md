@@ -56,6 +56,11 @@ um ID de casa aleatório nem alterado o cliente para ignorar essa etapa.
 Precisamos desse erro, ou do erro anterior de PlayerCreation/Addressables, para
 distinguir uma referência ausente, conteúdo não carregado ou etapa pendente.
 
+Atualização: a captura ampliada recebeu os logs nativos, mas não os C#.
+Foi confirmado que ApplicationManager.Awake desativa UnityLogger nessa build.
+Veja o [patch de diagnóstico e teste dos links do bucket](client_logging_1_38_4.md)
+para habilitar as mensagens de inicialização que o logcat sozinho não reativa.
+
 ## Capturar pelo próprio Termux
 
 O Android precisa ter **Depuração sem fio**, ativada nas Opções do desenvolvedor.

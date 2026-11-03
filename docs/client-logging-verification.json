@@ -1,0 +1,52 @@
+{
+  "appVersion": "1.38.4",
+  "abi": "arm64-v8a",
+  "sourceCapture": {
+    "linesCollected": 554,
+    "linesMentioningUnity": 41,
+    "secondsCollected": 25.6,
+    "interruptedByCtrlC": true,
+    "samePidAtEnd": true,
+    "gameInitializationExceptionPresent": false
+  },
+  "nativeFinding": {
+    "method": "PlayKids.XD.ApplicationManager.Awake",
+    "methodRva": "0x2738D18",
+    "interface": "UnityEngine.ILogger",
+    "interfaceSetterSlot": 2,
+    "setterCallRva": "0x2738E90",
+    "argumentInstructionRva": "0x2738E8C",
+    "originalArgument": "false",
+    "diagnosticArgument": "true",
+    "originalBytes": "e1031f2a",
+    "diagnosticBytes": "21008052"
+  },
+  "realLibraryValidation": {
+    "bytes": 91868752,
+    "originalSha256": "32e8e598619d9ff1136a184b39b0c93b19a461b56ef612bb56871072765e6fbe",
+    "diagnosticSha256": "39251a034d833e74e48797eed3b608732d7a952f9dafdc55b1a5ef48e964856e",
+    "changedOffsets": ["0x2738e8c", "0x2738e8d", "0x2738e8e", "0x2738e8f"],
+    "originalFilePreserved": true,
+    "restoredCopyComparedByteForByteWithOriginal": true
+  },
+  "toolsTests": {
+    "clientLibraryPatcherPassed": 6,
+    "bucketProbePassed": 4,
+    "failed": 0,
+    "deviceExtractionUsesFakeAdbInTests": true,
+    "httpProbeUsesFakeResponsesInTests": true
+  },
+  "bucketInvestigation": {
+    "jsonUrlsIdentified": 6,
+    "nativeHeadValidationIdentified": true,
+    "directHttpTestFromCloudPerformed": false,
+    "cloudPolicyGrantsBucketHost": false,
+    "httpProbeOnUserDevice": "pending user run",
+    "worldFailureCausedByBucketConfirmed": false
+  },
+  "gameServerProtocolChanged": false,
+  "clientMetadataChanged": false,
+  "appAutomaticallyInstalledOrSigned": false,
+  "libraryCheckedAgainstInstalledUserApk": "pending user run",
+  "managedLogsOnUserDevice": "pending user install with MT Manager"
+}

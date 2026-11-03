@@ -16,6 +16,8 @@ visual dessa etapa ainda precisa de teste no Android; os contratos e limites
 estão em [Mundo e sala local](docs/world_1_38_4.md).
 O servidor também confirma o estado de animação `aaa`. Para investigar retorno
 à tela inicial, veja [captura de erros do APK pelo Termux](docs/android_startup_1_38_4.md).
+O [patch de diagnóstico do logger C#](docs/client_logging_1_38_4.md) explica
+como habilitar logs na lib ARM64 com validação de hash e testar os JSONs do pkxd-bucket.
 
 Para instalar no Termux:
 
