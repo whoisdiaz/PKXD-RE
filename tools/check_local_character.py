@@ -6,11 +6,13 @@ import json
 import secrets
 import socket
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pkxd_server import wire
 from pkxd_server.accounts import AUTH, SIGN_UP, USER
+from pkxd_server.startup import PET_STORE_ID, STORE_IDS
 
 
 def check(host, port):
@@ -65,6 +67,24 @@ def check(host, port):
 
     with login()[0] as sock:
         print("OK: conexão, login e estado inicial do personagem")
+        # These requests blocked the reported Android startup before profile creation.
+        requests = [("time", b"", "time", None)]
+        requests += [("store_tree", wire.string(2, store_id), "L", store_id) for store_id in STORE_IDS]
+        requests += [("pet_store_tree", wire.string(2, PET_STORE_ID), "PST", PET_STORE_ID)]
+        sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True))
+                              for name, payload, _, _ in requests))
+        for _, _, expected, store_id in requests:
+            name, payload = wire.parse_event(wire.receive(sock))
+            response = wire.Proto(payload)
+            if name != expected:
+                raise ValueError("Evento de inicialização incorreto")
+            if expected == "time":
+                if abs(response.integer(2) - time.time()) > 5:
+                    raise ValueError("Horário do servidor não está em segundos Unix")
+            elif (not response.integer(1)
+                  or response.message(4 if expected == "PST" else 3).text(1) != store_id):
+                raise ValueError("Catálogo de inicialização não confirmado")
+        print("OK: horário do servidor e catálogos locais de inicialização")
         nickname = "Local" + secrets.token_hex(4)
         sock.sendall(wire.frame(wire.event("profile_update", wire.string(2, nickname), room=True)))
         name, payload = wire.parse_event(wire.receive(sock))

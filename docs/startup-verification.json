@@ -1,0 +1,60 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "pythonVersion": "3.12.14",
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 48,
+    "failed": 0
+  },
+  "processSmoke": {
+    "diagnosticScriptPassed": true,
+    "timeAndAllStoreTreesChecked": true,
+    "cliStartedOutsideRepository": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0
+  },
+  "protocolChecks": {
+    "currentTimeUnit": "Unix seconds",
+    "knownStoreIds": 18,
+    "storeResponseEvent": "L",
+    "storeCheckResponseEvent": "L2",
+    "petStoreResponseEvent": "PST",
+    "storeDataField": 3,
+    "petStoreDataField": 4,
+    "negativeInt32CacheOwnerChecked": true,
+    "startupRequestsBeforeLoginRejected": true,
+    "noAutomaticTermsAcceptance": true
+  },
+  "userReportedAndroidBeforeFix": {
+    "anonymousSignup": true,
+    "authSession": true,
+    "userSession": true,
+    "allocation": true,
+    "tcpLogin": true,
+    "characterBootstrapReceived": true,
+    "loadingStillPresent": true,
+    "pendingSteps": [
+      "AcceptanceOfTermsFlowInitStep",
+      "ServerTimeServiceInitStep",
+      "StoreTreeInitStep"
+    ]
+  },
+  "androidAfterThisChange": "pending user retest",
+  "catalogMode": "empty local bootstrap trees, no original product catalog or initial inventory",
+  "assetInspection": {
+    "catalogSha256": "c898def1a63b6043cfc28204fc7646e69e9a87d84e68a182d174c0651bc58537",
+    "gamesZipSha256": "cc6975846baaa9b95f78a4cd97c96ef6623385e68571168398a9f0c6a2e8e1a0",
+    "bundleCount": 31,
+    "allBundlesMatchedCatalog": true,
+    "originalUploadsModified": false
+  },
+  "clientMetadataChanged": false,
+  "databaseSchemaChanged": false,
+  "unimplementedObservedEvents": [
+    "fruit",
+    "matchmaking",
+    "hwn",
+    "slot_interaction"
+  ]
+}

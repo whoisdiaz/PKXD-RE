@@ -1,0 +1,247 @@
+{
+  "catalog": {
+    "sha256": "c898def1a63b6043cfc28204fc7646e69e9a87d84e68a182d174c0651bc58537",
+    "bytes": 5423797,
+    "format": "Unity Addressables ContentCatalogData",
+    "internalIdCount": 16559,
+    "resourceTypeCount": 217,
+    "providerCount": 6,
+    "storeTreeRpcDataPresent": false
+  },
+  "gamesArchive": {
+    "sha256": "cc6975846baaa9b95f78a4cd97c96ef6623385e68571168398a9f0c6a2e8e1a0",
+    "bytes": 13634281,
+    "bundleCount": 31,
+    "unityVersions": [
+      "2021.3.18f1"
+    ],
+    "bundleBytes": 14538493,
+    "allBundlesMatchedCatalog": true,
+    "bundles": [
+      {
+        "path": "games/collectquest/addressables/fruit01.prefab_c06661809a553b628bf9345d836cff1f.bundle",
+        "bytes": 29057,
+        "sha256": "922265cbc49cadcb523a9d0a6f7aaaf4ae8c1bcf9c1b4b06d725abd013b83fa5",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/collectquest/addressables/fruit01dark.prefab_5af509bef331be04e9b557ee1d56584c.bundle",
+        "bytes": 28339,
+        "sha256": "d67c3788eca36d855e6963e0912f11c9c936bbd4822c3037fe2f6541f9a33787",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/collectquest/addressables/fruit02.prefab_150e76c53bdfe43a3c9d8775cb4f20d2.bundle",
+        "bytes": 30457,
+        "sha256": "5b2b985ffb391eee4d9f305171f451e017aab3dcfe18869c1bba8059033acb67",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/collectquest/addressables/fruit02dark.prefab_20b6069f228b94b32f5eae597c97494e.bundle",
+        "bytes": 29692,
+        "sha256": "2bc9b9ae6dbc20b22555a22299dc223c0f661044b2655253f42843d4280ea9ec",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/collectquest/addressables/fruit03.prefab_03423da3d86c4cf87954f905707dc382.bundle",
+        "bytes": 27310,
+        "sha256": "625c409e1f39db8fb0873bd81626d412b9fd91ba57ad5a56c03d9066a905ae71",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/collectquest/addressables/fruit03dark.prefab_7012924cf5f9e6e0b9a052a57b9ba277.bundle",
+        "bytes": 26579,
+        "sha256": "2ddf94c0bc56c8fb7f45baaec84df4d14c50626f59256edfbf1fa2624c527dc1",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/crazyridesidecontent.prefab_8c50bdd1d3ccb658809cc936ead3ba43.bundle",
+        "bytes": 786048,
+        "sha256": "8afb6a9e2130cfa7ab65e87652e849c8e3ce2851e0248e466dc02e4a17594dd9",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/crazyrunsidecontent.prefab_1c0bca0a175d0c27fb75c3f4aed2abe9.bundle",
+        "bytes": 724831,
+        "sha256": "cbd3054511bffb9b720e810343e8fb96d944bc29cf41a463272a945222373d1a",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/cupidvalentinessidecontent.prefab_88b93f884263de91a0760be5a319961c.bundle",
+        "bytes": 101808,
+        "sha256": "2817e1ac1107c200a04a11b0a6ffec911db21b25eff9117e311ffd0d03a87a70",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/customsidecontent.prefab_46aed2f4f7ab5bc757819822d527de84.bundle",
+        "bytes": 382378,
+        "sha256": "d97ff937dd20f356d8cb1bec0374052769f9c13b96984261e0627ded6b5b3fff",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/egghuntsidecontent.prefab_6914f4cd566f1c9c32cd0ab6c60415c8.bundle",
+        "bytes": 13281,
+        "sha256": "83e4ddbd300e32d571c839f6bb050e83151646d96e17ea5909db87186aeff057",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/fashionsidecontent.prefab_485df59f82b81fcfe8ba00676a0c9716.bundle",
+        "bytes": 473608,
+        "sha256": "ffb06f93164ef1a323545b39ea400b7548674a62ee5fded911c0e59040d14e66",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/freezingfunsidecontent.prefab_02af2fa1291c1228e3ae565484b3a3a1.bundle",
+        "bytes": 226315,
+        "sha256": "35654fe5cbf3066df1ccac5770f27cc1673dbcc33845c110f064174529bcfb42",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/fruitquestsidecontent.prefab_3941875f766a13ea719962ffc0d0aaf8.bundle",
+        "bytes": 745064,
+        "sha256": "b4634ebf8213704fdb8a12dc16f8712c425e0427177864ff5c24fdc957029d19",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/fruitquestsidecontentmonster.prefab_9d4bad575e02aae3f7c9177ab382d0ad.bundle",
+        "bytes": 743154,
+        "sha256": "f068612da867ca48541acec3d16d08ac11bd79d81298fcb9ee2526666545cac9",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/groundracesidecontent.prefab_881b08de3e2a19daabb2b0de8a06d5cb.bundle",
+        "bytes": 12802,
+        "sha256": "7f2a37af26aca7bce346dd238ab9aa8a7960096e74de572d4739a4ed61d0ba39",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/icyraceside.prefab_e25540023439bf0684928645085653a9.bundle",
+        "bytes": 484329,
+        "sha256": "aa45b72b90c5b96bc82b09d4ca62c7231dc69cd5acf6a51d1fff6bcb7df017d5",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/marathonsidecontent.prefab_e83453e9a80c22de4cf79bede2093b59.bundle",
+        "bytes": 902435,
+        "sha256": "0701191addeae7e146b1beb89f0a663bf825b40bf04240e21610bec43b759073",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/multiplayerracesidecontent.prefab_7e586ba30e14146c10800a2d6c5f400d.bundle",
+        "bytes": 15228,
+        "sha256": "152a60ed1811f1589404de1525af44732072f2dd6c3bd40eaad4a959357b0ddf",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/petparadesidecontent.prefab_171aa0322e25ac92069d6562f9662670.bundle",
+        "bytes": 785545,
+        "sha256": "323ed043c40a661d65b6baa76ab2eed213aa2805f197358bfa0b18c38dfcf1bf",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/pizzaquestsidecontent.prefab_e660f5ce8473157b751f9010e374ed0f.bundle",
+        "bytes": 694492,
+        "sha256": "5402905855c31fb31e6a3c0a37a55b2cd00f3f7f345e3d13991d92eeb8789c54",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/pizzaquestsidecontentmonster.prefab_f0f65fa1feee059dddc56abdf40c1727.bundle",
+        "bytes": 703459,
+        "sha256": "39e9d49015f112539f0c32a9ce515b9f13079acf04911d6e22376e0fc4dcb765",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/ringcollectionsidecontent.prefab_eee61e8d367c84a58ce268535188d847.bundle",
+        "bytes": 1361699,
+        "sha256": "99b68c99a7a53cd8257b4112c7a547b7ba3ac1ba76c2adf0eb36bb826fb542d9",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/ringcollectionsidehelicopter.prefab_3f7f261ca23c7d85094014e9efa1a757.bundle",
+        "bytes": 1188473,
+        "sha256": "3dc1e707ead89a94d4329b464f73db904112df4b86b2490acd1d80400142b939",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/ringcollectionsidenimda.prefab_95dceec285127edcbb1ecefaf1c7cebe.bundle",
+        "bytes": 484192,
+        "sha256": "b91744274a5df2994288c703d64525788328561f505a6a809405c4a338ed7ae0",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/ringracesidecontent.prefab_72ed549c3816f6b4562e9ebe163eeb8c.bundle",
+        "bytes": 1361671,
+        "sha256": "9447782e5dda019e102abaf527e2b64723c36e1b074de94b2b9ee2ebbc53207a",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/ringracesidecontentpetparkour.prefab_19b2899e7b0dfa9d896e61c9d3f0be4b.bundle",
+        "bytes": 1405837,
+        "sha256": "0241c7b8b10c3322464a2f2f5e78af1cb7df79b7d4290f89a1f801f69fec4b13",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/staircasesidecontent.prefab_bb175f25d492213b560aad4cdb8507f6.bundle",
+        "bytes": 275554,
+        "sha256": "064349cd2f0562f7e581572122c60cc2898a0a7fb175c4f43b8a1923d1e681ad",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/staircasesidecontentladybug.prefab_105045057f0377b8b570d8416b09fca7.bundle",
+        "bytes": 275590,
+        "sha256": "ddf8a34faee939f6701efa5d2c28dd7cca2a4f678525dfdbd3ed98fbf6282ea1",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/stalkersidecontent.prefab_6a35afb3e4f95db005b53340ca57e9eb.bundle",
+        "bytes": 9079,
+        "sha256": "05a44f8b07359b289e1feb2392e6529b5b4f328b5fa257285e1ffa492038047c",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      },
+      {
+        "path": "games/common/gameendscreen/addressables/stalkersidecontentladybug.prefab_04d4a4f33cddcabd33e91929b3785384.bundle",
+        "bytes": 210187,
+        "sha256": "1c01e9d9c4380a5f3d92f70ad54694f8d64dab0c3c394e7f1969f6009782476c",
+        "unityVersion": "2021.3.18f1",
+        "catalogMatches": 1
+      }
+    ]
+  },
+  "originalUploadsModified": false,
+  "notes": [
+    "User identified both files as coming from APK assets.",
+    "The catalog indexes Unity resources; it is not the StoreTreeData RPC response.",
+    "The ZIP contains collectquest fruit prefabs and common minigame end-screen bundles.",
+    "No Unity bundle is executed or rewritten for this initialization fix."
+  ]
+}

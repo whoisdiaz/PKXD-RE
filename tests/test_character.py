@@ -210,6 +210,48 @@ class CharacterFlowTests(unittest.TestCase):
             self.assertTrue(response.text(2))
             self.assertEqual(sock.recv(1), b"")
 
+    def test_startup_sequence_after_game_login_receives_actual_room_replies(self):
+        from pkxd_server.startup import STORE_IDS, PET_STORE_ID
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, player_id)
+        requests = [("Analytics/sessionId", b"session-id"), ("Analytics/deviceId", b"device-id"),
+                    ("friends", b""), ("pet", wire.number(1, 28) + wire.string(2, user["userId"])),
+                    ("npc/fetch-owned", b""), ("game_variable", bytes.fromhex("080310ffffffffffffffffff01")),
+                    ("time", b"")]
+        requests += [("store_tree", wire.string(2, store_id)) for store_id in STORE_IDS]
+        requests += [("pet_store_tree", wire.string(2, PET_STORE_ID)),
+                     ("profile_update", wire.number(1, 5))]
+        sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True)) for name, payload in requests))
+        names = []
+        trees = []
+        for _ in range(len(requests) - 2):  # Analytics expects no acknowledgement.
+            packet = wire.receive(sock)
+            self.assertEqual(packet[0], wire.ROOM_EVENT)
+            name, payload = wire.parse_event(packet)
+            response = wire.Proto(payload)
+            names.append(name)
+            if name == "L":
+                self.assertEqual(response.integer(1), 1)
+                trees.append(response.message(3).text(1))
+            elif name == "time":
+                self.assertLess(abs(response.integer(2) - time.time()), 5)
+            elif name == "Q":
+                self.assertEqual((response.text(3), response.text(4), response.integer(6)), ("GET", "", 0))
+        self.assertEqual(names, ["get_friends_result", "pet", "npc/fetch-owned", "q", "time"]
+                         + ["L"] * len(STORE_IDS) + ["PST", "Q"])
+        self.assertEqual(trees, list(STORE_IDS))
+        sock.sendall(wire.frame(b"\x01"))
+        self.assertEqual(wire.receive(sock), b"\x02")
+        self.assertEqual(self.store.user(user["userToken"])["terms"], "")
+
+    def test_startup_data_cannot_be_requested_before_game_login(self):
+        with socket.create_connection(self.game.server_address, timeout=3) as sock:
+            sock.sendall(wire.frame(b"\x03"))
+            wire.receive(sock)
+            sock.sendall(wire.frame(wire.event("time", room=True)))
+            self.assertEqual(sock.recv(1), b"")
+
     def test_prelogin_profile_and_bad_frames_are_closed(self):
         for bad in (struct.pack(">i", -1), struct.pack(">i", wire.MAX_FRAME + 1),
                     wire.frame(wire.event("profile_update", wire.string(2, "NoAuth"), room=True))):

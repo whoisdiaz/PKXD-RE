@@ -46,6 +46,7 @@ def main():
         logging.info("Lobby HTTP: %s:%s", *server.server_address[:2])
         logging.info("Game TCP: %s:%s (character bootstrap)", *game.server_address[:2])
         logging.info("Local accounts and characters: %s", store.path)
+        logging.info("Startup services: server time, empty local catalogs and initial lists")
         logging.info("Client metadata must redirect BOTH accounts and lobby to this server")
         game_thread = threading.Thread(target=game.serve_forever, daemon=True)
         game_thread.start()

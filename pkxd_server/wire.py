@@ -85,6 +85,11 @@ def string(field, value):
     return varint(field << 3 | 2) + varint(len(encoded)) + encoded if encoded else b""
 
 
+def blob(field, value):
+    """Encode a present submessage/bytes field, including an empty message."""
+    return varint(field << 3 | 2) + varint(len(value)) + value
+
+
 class Proto:
     def __init__(self, data):
         self.fields = {}
@@ -115,6 +120,10 @@ class Proto:
         if wire != 0:
             raise ProtocolError("Expected protobuf integer")
         return value
+
+    def int32(self, field, default=0):
+        value = self.integer(field, default) & 0xffffffff
+        return value - (1 << 32) if value & 0x80000000 else value
 
     def text(self, field, default=""):
         wire, value = self.fields.get(field, (2, default.encode()))
@@ -147,6 +156,20 @@ class Proto:
                 raise ProtocolError("Expected repeated protobuf integer")
             if len(result) > limit:
                 raise ProtocolError("Too many repeated integers")
+        return result
+
+    def texts(self, field, limit=64):
+        values = self.repeated.get(field, [])
+        if len(values) > limit:
+            raise ProtocolError("Too many repeated strings")
+        result = []
+        for wire, value in values:
+            if wire != 2:
+                raise ProtocolError("Expected repeated protobuf string")
+            try:
+                result.append(value.decode("utf-8"))
+            except UnicodeDecodeError as error:
+                raise ProtocolError("Invalid protobuf UTF-8") from error
         return result
 
 

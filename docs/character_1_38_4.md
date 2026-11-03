@@ -6,6 +6,12 @@ somente o lobby e não iniciava a conexão de jogo. Agora há contas locais, TCP
 perfil persistente, com metadata que redireciona também contas. A tela Android
 ainda precisa ser testada.
 
+Atualização: os logs posteriores enviados do Android confirmaram o fluxo de
+cadastro/sessões/lobby/TCP e identificaram espera por ServerTimeServiceInitStep
+e StoreTreeInitStep. A [correção de inicialização](startup_1_38_4.md) implementa
+as respostas dessas etapas e consultas iniciais; seu resultado na tela precisa
+ser verificado no aparelho.
+
 ## Termux
 
 Pare a instância anterior com Ctrl+C e execute:

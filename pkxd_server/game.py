@@ -12,6 +12,7 @@ import struct
 import threading
 
 from .accounts import AccountError
+from .startup import REQUESTS, StartupServices
 from . import wire
 
 LOG = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class GameServer(socketserver.ThreadingTCPServer):
 
     def __init__(self, address, store, policy):
         self.store, self.policy = store, policy
+        self.startup = StartupServices()
         self.ids = itertools.count(1)
         self.lock = threading.Lock()
         self.connections = set()
@@ -119,6 +121,17 @@ class GameHandler(socketserver.BaseRequestHandler):
                         if not self.joined:
                             raise wire.ProtocolError("Room required")
                         self.equip(payload)
+                    elif opcode == wire.ROOM_EVENT and name in REQUESTS:
+                        if not self.joined:
+                            raise wire.ProtocolError("Room required")
+                        responses = self.server.startup.handle(name, payload,
+                            user_id=self.player["user_id"], transport_id=self.transport_id)
+                        if responses is None:
+                            LOG.info("TCP unsupported event opcode=%d name=%s bytes=%d",
+                                     opcode, json.dumps(name), len(payload))
+                        else:
+                            for response_name, response_payload in responses:
+                                self.emit(response_name, response_payload, room=True)
                     else:
                         # Event names are user input: report a bounded, escaped name only.
                         LOG.info("TCP unsupported event opcode=%d name=%s bytes=%d",
@@ -232,6 +245,7 @@ class GameHandler(socketserver.BaseRequestHandler):
     def profile(self, payload):
         request = wire.Proto(payload)
         event_id = request.integer(1)
+        LOG.info("TCP profile request id=%d", event_id)
         player = self.server.store.player(self.player["id"])
         if event_id == 0:  # SetNicknameRequest; proto3 omits the default event ID.
             try:
@@ -262,6 +276,7 @@ class GameHandler(socketserver.BaseRequestHandler):
                         + wire.string(3, "SET" if event_id == 4 else "GET")
                         + wire.string(4, player["terms"]) + wire.number(6, player["ads_consent"]))
             self.emit("Q", response, room=True)
+            LOG.info("TCP legal information sent action=%s", "SET" if event_id == 4 else "GET")
         elif event_id in (6, 7):
             if event_id == 6:
                 self.server.store.set_open_chat(player["id"], bool(request.integer(2)))
