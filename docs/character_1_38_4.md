@@ -87,9 +87,12 @@ verificados. Como regra local inicial, novo perfil permanece ativo até o primei
 nome; nenhum passo de tutorial é enviado como ficticiamente concluído.
 
 Cada conexão possui sala isolada de inicialização contendo o próprio jogador.
-O evento local `tbulv` leva player ID int32 BE, tamanho da chave int32 BE, chave
-ASCII e valor tipado. Referências: UserVariable.Serialize (`0x3A86404`),
-Deserialize (`0x3A86830`), serializadores `0x359C240` / `0x359C8D4`.
+Nas notificações servidor → cliente, `tbulv` leva player ID int32 BE, tamanho da
+chave int32 BE, chave ASCII e valor tipado. Na escrita cliente → servidor, o ID
+é omitido: o dono vem da conexão autenticada. Isso foi corrigido ao comparar
+UserVariable.Serialize (`0x3A86404`) com Deserialize (`0x3A86830`); veja a
+[correção de variáveis](variable_updates_1_38_4.md).
+Os serializadores de valores são `0x359C240` / `0x359C8D4`.
 Tags usadas: string 1, int32 BE 2, byte 3, ByteList 5, IntList 6.
 O formato de `tbulvb` é diferente e não é usado aqui.
 

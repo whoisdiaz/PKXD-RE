@@ -1,0 +1,63 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "pythonVersion": "3.12.14",
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 63,
+    "failed": 0
+  },
+  "reportedAndroidBeforeFix": {
+    "baseCommit": "d4d4ce5",
+    "inventoryStagePassed": true,
+    "backpackFavoritesReturned": true,
+    "newStartupRequestsObserved": [
+      "hair_style",
+      "lb",
+      "fetch_events",
+      "init_pos",
+      "init_day_night",
+      "pet/19",
+      "pet/24"
+    ],
+    "lastLog": "TCP rejected malformed or out-of-sequence packet",
+    "exactRejectedPacketKnown": false
+  },
+  "reproducedBug": {
+    "clientSerializerRva": "0x3A86404",
+    "clientSetterRva": "0x35A5B2C",
+    "serverNotificationDecoderRva": "0x3A86830",
+    "clientLayout": "key length int32 BE + ASCII key + typed value",
+    "serverLayout": "authenticated player ID int32 BE + key length int32 BE + ASCII key + typed value",
+    "nativeClientUpdateHex": "000000016a05102030",
+    "serverReplyExampleHex": "00000007000000016a05102030",
+    "authenticationRequired": true,
+    "spoofedOwnerPrefixRejected": true,
+    "nativeUpdateThenPingPassed": true
+  },
+  "diagnostics": {
+    "opcodeEventAndValidationReasonLogged": true,
+    "rawPayloadsAndSessionTokensNotLogged": true
+  },
+  "processSmoke": {
+    "updatedDiagnosticPassed": true,
+    "nativeVariableWriteWithoutDisconnect": true,
+    "newStartupResponsesChecked": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0
+  },
+  "newResponseChecks": {
+    "hairInventorySuccessfulField": 1,
+    "lootBoxInfoSuccessfulField": 3,
+    "petDetailsResponseId": 24,
+    "eggDetailsResponseId": 32,
+    "dayNightEvent": "G",
+    "initialRemotePositionsEvent": "C",
+    "emptyRawDeflateHex": "0300",
+    "activeWorldEventsConfigured": false,
+    "worldSpawnOrSimulationImplemented": false
+  },
+  "databaseSchemaChanged": false,
+  "clientMetadataChanged": false,
+  "androidAfterThisChange": "pending user retest"
+}

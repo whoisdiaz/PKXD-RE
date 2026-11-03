@@ -178,6 +178,27 @@ def variable(player_id, key, typed_value):
     return I32.pack(player_id) + I32.pack(len(encoded)) + encoded + typed_value
 
 
+def client_variable_update(key, typed_value):
+    """Client -> server omits player ID; the authenticated connection owns it."""
+    encoded = key.encode("ascii")
+    return I32.pack(len(encoded)) + encoded + typed_value
+
+
+def parse_client_variable_update(data):
+    if len(data) < 6:
+        raise ProtocolError("Truncated client variable update")
+    size = I32.unpack_from(data)[0]
+    if not 1 <= size <= 64 or 4 + size >= len(data):
+        raise ProtocolError("Invalid client variable key length")
+    try:
+        key = data[4:4 + size].decode("ascii")
+    except UnicodeDecodeError as error:
+        raise ProtocolError("Invalid client variable key") from error
+    if any(ord(char) < 33 or ord(char) > 126 for char in key):
+        raise ProtocolError("Invalid client variable key")
+    return key, data[4 + size:]
+
+
 def parse_variable(data):
     if len(data) < 10:
         raise ProtocolError("Truncated user variable")

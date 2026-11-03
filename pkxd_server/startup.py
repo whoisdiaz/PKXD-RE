@@ -22,7 +22,8 @@ STORE_IDS = (
 PET_STORE_ID = "eggs-store-0_1_86"
 CATALOG_VERSION = "local-bootstrap-1"
 REQUESTS = frozenset(("time", "store_tree", "pet_store_tree", "friends", "pet",
-                      "npc/fetch-owned", "game_variable", "Analytics/sessionId", "Analytics/deviceId"))
+                      "npc/fetch-owned", "game_variable", "Analytics/sessionId", "Analytics/deviceId",
+                      "hair_style", "lb", "init_day_night", "init_pos", "fetch_events"))
 
 
 def empty_tree(store_id):
@@ -65,6 +66,27 @@ class StartupServices:
             # CurrentTimeResponse.ctor calls DateTimeOffset.FromUnixTimeSeconds.
             LOG.info("TCP server time sent (Unix seconds)")
             return [("time", wire.number(2, int(time.time())))]
+        if name == "hair_style" and event_id == 0:
+            LOG.info("TCP initial hair style inventory sent count=0")
+            return [("get_hair_styles", wire.number(1, True))]
+        if name == "lb" and event_id == 0:
+            # LootBoxInfoResponseMessage.Successful is field 3, not field 1.
+            LOG.info("TCP initial loot box catalog sent count=0")
+            return [("lb", wire.number(3, True))]
+        if name == "init_day_night" and not request.fields:
+            # DayNightStateResponse: day=false (default), SkipInterpolation=2.
+            LOG.info("TCP initial day/night state sent night=false")
+            return [("G", wire.number(2, True))]
+        if name == "init_pos" and not request.fields:
+            # OnPlayerPositionUpdate inflates an RFC1951 stream then loops over
+            # remote states. There are no other players in the isolated room.
+            LOG.info("TCP initial remote positions sent count=0")
+            return [("C", b"\x03\x00")]
+        if name == "fetch_events" and not request.fields:
+            # This fan-out request has no dedicated acknowledgement in the
+            # client. No active quest/world events are configured locally.
+            LOG.info("TCP active world events: none configured")
+            return []
         if name in ("store_tree", "pet_store_tree"):
             if name == "store_tree" and event_id == 1:
                 ids = request.texts(2)
@@ -111,6 +133,10 @@ class StartupServices:
                     LOG.info("TCP unsupported remote pet needs lookup")
                     return None
                 reply = wire.number(1, 21)
+            elif event_id == 19:  # Get details for the owned pets (empty).
+                reply = wire.number(1, 24)
+            elif event_id == 24:  # Get details for the owned eggs (empty).
+                reply = wire.number(1, 32)
             elif event_id == 28:  # GetAllRemotePetsRequest -> response event 36.
                 ids = request.texts(2)
                 if any(value != user_id for value in ids):

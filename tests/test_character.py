@@ -27,6 +27,8 @@ class WireEvidenceTests(unittest.TestCase):
         self.assertEqual((request.text(1), request.text(3)), ("abc", "1.38.4"))
         self.assertEqual(wire.variable(7, "j", b"\x05\x10\x20\x30"),
                          bytes.fromhex("00000007000000016a05102030"))
+        self.assertEqual(wire.client_variable_update("j", b"\x05\x10\x20\x30"),
+                         bytes.fromhex("000000016a05102030"))
         self.assertEqual(wire.number(3, 1700000000000), bytes.fromhex("1880d095ffbc31"))
 
     def test_malformed_protobuf_is_rejected(self):
@@ -43,6 +45,17 @@ class WireEvidenceTests(unittest.TestCase):
         self.assertEqual(wire.Proto(bytes.fromhex("08010a0202030804")).integers(1), [1, 2, 3, 4])
         with self.assertRaises(wire.ProtocolError):
             wire.Proto(bytes.fromhex("0a0180")).integers(1)
+
+    def test_client_variable_payload_has_no_owner_prefix(self):
+        data = bytes.fromhex("000000016a05102030")
+        self.assertEqual(wire.parse_client_variable_update(data), ("j", b"\x05\x10\x20\x30"))
+        for malformed in (b"", bytes.fromhex("00000000"), bytes.fromhex("000000046a05"),
+                          bytes.fromhex("000000016a"),
+                          wire.variable(1, "j", b"\x05\x10\x20\x30")):
+            with self.subTest(data=malformed), self.assertRaises(wire.ProtocolError):
+                wire.parse_client_variable_update(malformed)
+        # Type validity is checked by the update policy after structural parsing.
+        self.assertEqual(wire.parse_client_variable_update(bytes.fromhex("000000016aff")), ("j", b"\xff"))
 
 
 class CharacterFlowTests(unittest.TestCase):
@@ -136,7 +149,7 @@ class CharacterFlowTests(unittest.TestCase):
         self.assertEqual(values[("tbulv", "k")], b"\x01" + user["userId"].encode())
         # Cosmetic and nickname are persisted through actual TCP requests.
         skin = b"\x05\x30\x60\x90"
-        sock.sendall(wire.frame(wire.event("tbulv", wire.variable(player_id, "j", skin), room=True)))
+        sock.sendall(wire.frame(wire.event("tbulv", wire.client_variable_update("j", skin), room=True)))
         name, payload = wire.parse_event(wire.receive(sock))
         self.assertEqual((name, wire.parse_variable(payload)), ("tbulv", (player_id, "j", skin)))
         sock.sendall(wire.frame(wire.event("profile_update", wire.string(2, "CodexTeste"), room=True)))
@@ -264,6 +277,51 @@ class CharacterFlowTests(unittest.TestCase):
         slots = [item[0] for item in struct.iter_unpack(">i", equipped[1:])]
         self.assertEqual(slots, [0, 0, 0, 0, 4636, 16, 5, 13, 272, 15, 273, 17, 17, 59, 59, 0, 0, 0])
 
+    def test_native_variable_updates_do_not_disconnect_and_replies_add_authenticated_owner(self):
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, player_id)
+        # Valid client framing for a non-cosmetic variable: it is rejected by
+        # policy without being misread as a record belonging to another user.
+        sock.sendall(wire.frame(wire.event("tbulv", bytes.fromhex("00000001680400"), room=True))
+                     + wire.frame(wire.event("tbulv", bytes.fromhex("000000016a05102030"), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        self.assertEqual(name, "tbulv")
+        self.assertEqual(wire.parse_variable(payload), (player_id, "j", b"\x05\x10\x20\x30"))
+        sock.sendall(wire.frame(b"\x01"))
+        self.assertEqual(wire.receive(sock), b"\x02")
+        self.assertEqual(json.loads(self.store.user(user["userToken"])["cosmetics"]), {"j": "05102030"})
+
+    def test_rejection_log_identifies_validation_without_logging_session_payload(self):
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, player_id)
+        with self.assertLogs("pkxd_server.game", level="INFO") as logs:
+            sock.sendall(wire.frame(wire.event("tbulv", wire.variable(1, "j", b"\x05\x10\x20\x30"), room=True)))
+            self.assertEqual(sock.recv(1), b"")
+        output = " ".join(logs.output)
+        self.assertIn('opcode=8 event="tbulv" reason=Invalid client variable key', output)
+        self.assertNotIn(user["userToken"], output)
+
+    def test_post_inventory_replay_keeps_connection_after_native_variable_write(self):
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, player_id)
+        requests = [("hair_style", b""), ("lb", b""), ("fetch_events", b""),
+                    ("init_pos", b""), ("init_day_night", b""), ("pet", b"\x08\x13"),
+                    ("pet", b"\x08\x18"), ("pet", b"\x08\x06"),
+                    ("slot_interaction", b"\x08\x03" + wire.string(2, user["userId"])),
+                    ("tbulv", bytes.fromhex("000000016a05102030"))]
+        sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True)) for name, payload in requests))
+        responses = [wire.parse_event(wire.receive(sock)) for _ in range(8)]
+        self.assertEqual(responses[:7], [("get_hair_styles", b"\x08\x01"), ("lb", b"\x18\x01"),
+                                        ("C", b"\x03\x00"), ("G", b"\x10\x01"),
+                                        ("pet", b"\x08\x18"), ("pet", b"\x08\x20"), ("pet", b"\x08\x07")])
+        self.assertEqual(responses[7][0], "tbulv")
+        self.assertEqual(wire.parse_variable(responses[7][1]), (player_id, "j", b"\x05\x10\x20\x30"))
+        sock.sendall(wire.frame(b"\x01"))
+        self.assertEqual(wire.receive(sock), b"\x02")
+
     def test_backpack_initial_query_and_updates_use_success_oneof_and_preserve_ownership(self):
         _, _, user = self.account()
         sock, player_id, _ = self.tcp(user["userToken"])
@@ -300,7 +358,7 @@ class CharacterFlowTests(unittest.TestCase):
         _, _, user = self.account()
         sock, player_id, _ = self.tcp(user["userToken"])
         self.bootstrap(sock, player_id)
-        sock.sendall(wire.frame(wire.event("tbulv", wire.variable(player_id, "wa", b"\x05\x08\x64"), room=True))
+        sock.sendall(wire.frame(wire.event("tbulv", wire.client_variable_update("wa", b"\x05\x08\x64"), room=True))
                      + wire.frame(b"\x01"))
         self.assertEqual(wire.receive(sock), b"\x02")
         player = self.store.user(user["userToken"])

@@ -67,13 +67,21 @@ def check(host, port):
                             raise ValueError("ID ou quantidade inválida no inventário inicial")
             if not expected <= received:
                 raise ValueError("Faltaram variáveis do personagem inicial")
-            return sock, response
+            return sock, response, wire.I32.unpack(connected[1:5])[0]
         except BaseException:
             sock.close()
             raise
 
-    with login()[0] as sock:
+    first_socket, _, transport_id = login()
+    with first_socket as sock:
         print("OK: conexão, login e estado inicial do personagem")
+        # Client writes omit owner ID; server notifications include it.
+        skin = b"\x05\x10\x20\x30"
+        sock.sendall(wire.frame(wire.event("tbulv", wire.client_variable_update("j", skin), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        if name != "tbulv" or wire.parse_variable(payload) != (transport_id, "j", skin):
+            raise ValueError("Atualização de variável no formato nativo não confirmada")
+        print("OK: atualização de variável no formato nativo sem desconexão")
         # These requests blocked the reported Android startup before profile creation.
         requests = [("time", b"", "time", None)]
         requests += [("store_tree", wire.string(2, store_id), "L", store_id) for store_id in STORE_IDS]
@@ -102,12 +110,24 @@ def check(host, port):
         if name != "pet" or wire.Proto(payload).integer(1) != 21:
             raise ValueError("Resposta de necessidades de pets não confirmada")
         print("OK: inventário inicial, favoritos da mochila e necessidades de pets")
+        post_inventory = [("hair_style", b"", "get_hair_styles", b"\x08\x01"),
+                          ("lb", b"", "lb", b"\x18\x01"),
+                          ("init_pos", b"", "C", b"\x03\x00"),
+                          ("init_day_night", b"", "G", b"\x10\x01"),
+                          ("pet", b"\x08\x13", "pet", b"\x08\x18"),
+                          ("pet", b"\x08\x18", "pet", b"\x08\x20")]
+        sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True))
+                              for name, payload, _, _ in post_inventory))
+        for _, _, expected_name, expected_payload in post_inventory:
+            if wire.parse_event(wire.receive(sock)) != (expected_name, expected_payload):
+                raise ValueError("Resposta de inicialização após o inventário não confirmada")
+        print("OK: cabelo, lootboxes, detalhes de pets/ovos e estado inicial da sala")
         nickname = "Local" + secrets.token_hex(4)
         sock.sendall(wire.frame(wire.event("profile_update", wire.string(2, nickname), room=True)))
         name, payload = wire.parse_event(wire.receive(sock))
         if name != "set_name_result" or wire.Proto(payload).text(1) != nickname:
             raise ValueError("Nome não confirmado pelo servidor")
-    sock, response = login()
+    sock, response, _ = login()
     with sock:
         if response.integer(3):
             raise ValueError("O personagem voltou como novo após reconectar")

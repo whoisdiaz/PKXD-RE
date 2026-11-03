@@ -66,6 +66,9 @@ Veja a [correção das etapas de inicialização](docs/startup_1_38_4.md) e a
 [inspeção dos assets enviados](docs/apk-assets-inspection.json).
 O [diagnóstico e a correção de InventoryServiceInitStep](docs/inventory_1_38_4.md)
 explicam o formato do inventário e a atualização das contas existentes.
+A [correção das atualizações de variáveis](docs/variable_updates_1_38_4.md)
+documenta a diferença entre os pacotes do cliente e do servidor e os novos
+diagnósticos de desconexão.
 
 Testes: `python -m unittest discover -s tests -v`.
 

@@ -83,6 +83,7 @@ class GameHandler(socketserver.BaseRequestHandler):
         self.request.settimeout(15)
         self.player = None
         self.joined = False
+        opcode, name = None, None
         with self.server.lock:
             self.transport_id = next(self.server.ids)
         try:
@@ -98,6 +99,7 @@ class GameHandler(socketserver.BaseRequestHandler):
             self.send(bytes((3,)) + wire.I32.pack(self.transport_id) + key)
             LOG.info("TCP connected; waiting for game login")
             while True:
+                opcode, name = None, None
                 packet = wire.receive(self.request)
                 opcode = packet[0]
                 if opcode in (wire.PING, wire.PONG):
@@ -161,8 +163,13 @@ class GameHandler(socketserver.BaseRequestHandler):
             LOG.info("TCP disconnected")
         except TimeoutError:
             LOG.info("TCP timed out waiting for client data")
-        except (wire.ProtocolError, struct.error):
-            LOG.info("TCP rejected malformed or out-of-sequence packet")
+        except wire.ProtocolError as error:
+            # ProtocolError messages are fixed validation labels, without payloads.
+            LOG.info("TCP rejected packet opcode=%s event=%s reason=%s",
+                     opcode, json.dumps(name[:64]) if name else "none", str(error))
+        except struct.error:
+            LOG.info("TCP rejected packet opcode=%s event=%s reason=Invalid integer encoding",
+                     opcode, json.dumps(name[:64]) if name else "none")
         except OSError:
             LOG.info("TCP connection closed")
 
@@ -224,9 +231,9 @@ class GameHandler(socketserver.BaseRequestHandler):
         LOG.info("TCP initial inventory sent entries=%d equippedSlots=%d", len(inventory), (len(values["o"]) - 1) // 4)
 
     def cosmetic(self, payload):
-        player_id, key, value = wire.parse_variable(payload)
-        if player_id != self.transport_id:
-            raise wire.ProtocolError("Variable belongs to another player")
+        # UserVariable.Serialize (0x3A86404) omits UserId on client writes.
+        # Server notifications add it back for UserVariable.Deserialize.
+        key, value = wire.parse_client_variable_update(payload)
         valid = ((key == "j" and len(value) == 4 and value[0] == 5)
                  or (key == "hs" and len(value) == 5 and value[0] == 2
                      and 0 <= wire.I32.unpack(value[1:])[0] <= 1000000)

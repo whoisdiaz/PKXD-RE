@@ -52,9 +52,18 @@ comprar pets ou criar NPCs.
 | `pet`, GetCache=6 | `pet` | GetPetsCacheResponse, EventId=7, pets/ovos vazios |
 | `pet`, GetPetNeedData=16 | `pet` | PetNeedDataResponse, EventId=21, Needs vazios para a conta local sem pets |
 | `pet`, GetAllRemotePets=28 | `pet` | GetAllRemotePetsResponse, EventId=36, consulta inicial do próprio jogador |
+| `hair_style`, GetInventory=0 | `get_hair_styles` | GetHairStyleInventoryResponse, Successful=1, Inventory vazio |
+| `lb`, Info=0 | `lb` | LootBoxInfoResponseMessage, Successful=3, Items vazios |
+| `pet`, GetPetDetails=19 | `pet` | PetDetailsResponse, EventId=24, lista vazia |
+| `pet`, GetEggDetails=24 | `pet` | EggDetailsResponse, EventId=32, lista vazia |
+| `init_day_night`, vazio | `G` | DayNightStateResponse, IsNight=false, SkipInterpolation=true |
+| `init_pos`, vazio | `C` | Snapshot vazio de posições remotas, comprimido com DEFLATE raw |
 
 `Analytics/sessionId` e `Analytics/deviceId` são mensagens de mão única com IDs
 brutos. Não precisam de resposta; o servidor não encaminha nem salva esses IDs.
+`fetch_events` consulta os eventos ativos; não há um acknowledgement dedicado
+no cliente. A sala local não tem eventos de mundo/quests configurados, portanto
+não envia notificações de eventos ativos. Isso não implementa essas mecânicas.
 
 O cache de variáveis aceita Owner=-1 para o mundo, zero ou o ID de transporte
 local. O C# codifica -1 como varint de dez bytes: o pedido de cache observado com

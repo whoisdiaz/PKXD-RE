@@ -1,4 +1,5 @@
 import unittest
+import zlib
 from unittest.mock import patch
 
 from pkxd_server import wire
@@ -79,6 +80,20 @@ class StartupContractTests(unittest.TestCase):
         self.assertEqual(self.services.handle("pet", request, user_id=user_id, transport_id=7),
                          [("pet", bytes.fromhex("0815"))])
         self.assertIsNone(self.handle("pet", request))
+
+    def test_new_post_inventory_query_schemas_and_response_ids(self):
+        self.assertEqual(self.handle("hair_style"), [("get_hair_styles", bytes.fromhex("0801"))])
+        self.assertEqual(self.handle("lb"), [("lb", bytes.fromhex("1801"))])
+        self.assertEqual(self.handle("pet", bytes.fromhex("0813")), [("pet", bytes.fromhex("0818"))])
+        self.assertEqual(self.handle("pet", bytes.fromhex("0818")), [("pet", bytes.fromhex("0820"))])
+        self.assertIsNone(self.handle("lb", bytes.fromhex("0802")))  # Purchase is not supported.
+
+    def test_day_state_and_empty_position_snapshot_use_different_codecs(self):
+        self.assertEqual(self.handle("init_day_night"), [("G", bytes.fromhex("1001"))])
+        name, compressed = self.handle("init_pos")[0]
+        self.assertEqual((name, compressed), ("C", bytes.fromhex("0300")))
+        self.assertEqual(zlib.decompress(compressed, wbits=-15), b"")
+        self.assertEqual(self.handle("fetch_events"), [])
 
     def test_analytics_are_one_way_and_ids_are_not_logged(self):
         sentinel = b"private-device-id-do-not-log"
