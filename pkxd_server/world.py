@@ -10,6 +10,7 @@ import math
 import struct
 
 from . import wire
+from .animation import valid_animation
 
 LOG = logging.getLogger(__name__)
 POSITION = struct.Struct(">BBffff")  # teleported, sequence, x, y, z, rotation
@@ -37,11 +38,16 @@ class LocalWorldSession:
     sequence: int = 0
     teleported: bool = False
     movement_packets: int = 0
+    animation_updates: int = 0
     variables: dict = field(default_factory=lambda: dict(INITIAL_VARIABLES))
     slots: dict = field(default_factory=dict)
 
     def set_runtime_variable(self, key, value):
         """True for an accepted, non-persistent world variable; False otherwise."""
+        if key == "aaa" and valid_animation(value):
+            self.variables[key] = value
+            self.animation_updates += 1
+            return True
         if key in BOOL_KEYS and value in (b"\x04\x00", b"\x04\x01"):
             self.variables[key] = value
             return True

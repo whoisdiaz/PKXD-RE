@@ -1,0 +1,53 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "reportedAndroidBaseCommit": "31f1937",
+  "reportedAndroid": {
+    "positionReceived": true,
+    "movementPackets": 1,
+    "durationSeconds": 12,
+    "lastLog": "TCP disconnected",
+    "rejectedVariableKey": "aaa",
+    "rejectedVariableType": 5,
+    "rejectedVariableBytes": 93,
+    "actualAnimationPayloadCaptured": false,
+    "exactUnityExceptionKnown": false,
+    "animationRejectionProvenToCauseReturnToLogin": false
+  },
+  "nativeEvidence": {
+    "animationVariableWriterRva": "0x30B6C44",
+    "animationVariableReceiverRva": "0x30B688C",
+    "animationModelToProtoRva": "0x2DE43D8",
+    "animationProtoToModelRva": "0x2DE42DC",
+    "nestedAnimationReaderRva": "0x2DE4258",
+    "fiveNonNullNestedAnimationMessagesRequired": true,
+    "animationFloatByteOrder": "little-endian protobuf fixed32",
+    "waitForLocalPlayerReadyRva": "0x2EC0DE8",
+    "readyCheckIncludesNonNullHomeModel": true,
+    "createLocalPlayerRva": "0x3DCFFC4",
+    "createLocalHomeModelRva": "0x3DD1138",
+    "actualFailureInHomeModelConfirmed": false
+  },
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -q",
+    "passed": 85,
+    "failed": 0,
+    "synthetic93ByteAnimationFixture": true,
+    "invalidFloatAndMergedDuplicateValidation": true,
+    "authenticatedAnimationEchoAndTransientStateCleanup": true,
+    "androidCaptureUsesFakeAdbForProcessTests": true,
+    "pidAndLogLevelFilterVerified": true,
+    "captureTimeoutAndMissingProcessVerified": true,
+    "knownCredentialRedactionVerified": true
+  },
+  "processSmoke": {
+    "localCharacterDiagnosticPassed": true,
+    "animationUpdateConfirmed": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0
+  },
+  "databaseSchemaChanged": false,
+  "clientMetadataChanged": false,
+  "adbCaptureOnActualUserDevice": "pending user run",
+  "androidVisualWorldEntryAfterThisChange": "pending user retest"
+}

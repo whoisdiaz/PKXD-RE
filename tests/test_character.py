@@ -368,6 +368,30 @@ class CharacterFlowTests(unittest.TestCase):
         with self.game.lock:
             self.assertNotIn("h", self.game.world_sessions[other_id].variables)
 
+    def test_avatar_animation_is_echoed_for_authenticated_owner_without_persisting(self):
+        _, _, user = self.account()
+        sock, transport_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, transport_id)
+        # Present empty objects are safe for all five native animation readers.
+        animation = bytes.fromhex("050a0012001a0022002a00")
+        update = wire.event("tbulv", wire.client_variable_update("aaa", animation), room=True)
+        sock.sendall(wire.frame(update))
+        name, payload = wire.parse_event(wire.receive(sock))
+        self.assertEqual((name, wire.parse_variable(payload)), ("tbulv", (transport_id, "aaa", animation)))
+        with self.game.lock:
+            self.assertEqual(self.game.world_sessions[transport_id].animation_updates, 1)
+        self.assertEqual(json.loads(self.store.user(user["userToken"])["cosmetics"]), {})
+        # A missing nested object is rejected without closing the session.
+        bad = wire.event("tbulv", wire.client_variable_update("aaa", animation[:-2]), room=True)
+        sock.sendall(wire.frame(bad) + wire.frame(b"\x01"))
+        self.assertEqual(wire.receive(sock), b"\x02")
+        sock.sendall(wire.frame(bytes((wire.LEAVE,)) + wire.I32.pack(1)))
+        wire.receive(sock)
+        sock.sendall(wire.frame(bytes((wire.JOIN,)) + wire.I32.pack(1)))
+        self.bootstrap(sock, transport_id)
+        with self.game.lock:
+            self.assertNotIn("aaa", self.game.world_sessions[transport_id].variables)
+
     def test_world_events_require_authentication_and_room_membership(self):
         for name, body in (("C", bytes(18)), ("PL", bytes(21)), ("slot_interaction", b"\x08\x02")):
             with socket.create_connection(self.game.server_address, timeout=3) as sock:

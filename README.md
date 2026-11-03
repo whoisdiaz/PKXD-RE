@@ -14,6 +14,8 @@ A sala individual agora recebe posição e rotação (`C`), mudanças de camada
 A cena e o ponto de nascimento são carregados pelo próprio APK. O resultado
 visual dessa etapa ainda precisa de teste no Android; os contratos e limites
 estão em [Mundo e sala local](docs/world_1_38_4.md).
+O servidor também confirma o estado de animação `aaa`. Para investigar retorno
+à tela inicial, veja [captura de erros do APK pelo Termux](docs/android_startup_1_38_4.md).
 
 Para instalar no Termux:
 

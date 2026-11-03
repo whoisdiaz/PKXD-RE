@@ -186,9 +186,9 @@ class GameHandler(socketserver.BaseRequestHandler):
             LOG.info("TCP connection closed")
         finally:
             if self.world is not None:
-                LOG.info("TCP world session ended; positionReceived=%s movementPackets=%d durationSeconds=%d",
+                LOG.info("TCP world session ended; positionReceived=%s movementPackets=%d animationUpdates=%d durationSeconds=%d",
                          str(self.world.position is not None).lower(), self.world.movement_packets,
-                         int(time.monotonic() - started))
+                         self.world.animation_updates, int(time.monotonic() - started))
             self.leave()
             with self.server.lock:
                 self.server.available_ids.add(self.transport_id)
@@ -267,7 +267,11 @@ class GameHandler(socketserver.BaseRequestHandler):
         key, value = wire.parse_client_variable_update(payload)
         if self.world.set_runtime_variable(key, value):
             self.set_variable(key, value)
-            LOG.info("TCP world runtime variable updated key=%s", json.dumps(key))
+            if key == "aaa":
+                if self.world.animation_updates == 1:
+                    LOG.info("TCP avatar animation state accepted")
+            else:
+                LOG.info("TCP world runtime variable updated key=%s", json.dumps(key))
             return
         valid = ((key == "j" and len(value) == 4 and value[0] == 5)
                  or (key == "hs" and len(value) == 5 and value[0] == 2

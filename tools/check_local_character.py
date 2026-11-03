@@ -83,6 +83,12 @@ def check(host, port):
         if name != "tbulv" or wire.parse_variable(payload) != (transport_id, "j", skin):
             raise ValueError("Atualização de variável no formato nativo não confirmada")
         print("OK: atualização de variável no formato nativo sem desconexão")
+        animation = bytes.fromhex("050a0012001a0022002a00")
+        sock.sendall(wire.frame(wire.event("tbulv", wire.client_variable_update("aaa", animation), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        if name != "tbulv" or wire.parse_variable(payload) != (transport_id, "aaa", animation):
+            raise ValueError("Estado de animação do avatar não confirmado")
+        print("OK: animação do avatar confirmada na sessão local")
         # The client chooses its spawn from the Unity scene. Use synthetic finite
         # coordinates only to verify server reception, not to claim an APK spawn.
         world_requests = [("slot_interaction", wire.number(1, 2) + wire.string(3, user["userId"])),
