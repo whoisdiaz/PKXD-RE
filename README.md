@@ -19,6 +19,12 @@ O servidor também confirma o estado de animação `aaa`. Para investigar retorn
 O [patch de diagnóstico do logger C#](docs/client_logging_1_38_4.md) explica
 como habilitar logs na lib ARM64 com validação de hash e testar os JSONs do pkxd-bucket.
 
+As consultas iniciais de `fruit`, `matchmaking`, `hwn` e `referral` agora
+recebem [respostas com os contratos do cliente](docs/entry_services_1_38_4.md):
+contagem de missões local zero, fila de minigame em espera, evento sazonal
+inativo e indicação sem link nem conversões. O diagnóstico TCP verifica essas
+quatro respostas junto com a sala e a persistência do personagem.
+
 Para instalar no Termux:
 
 ```sh

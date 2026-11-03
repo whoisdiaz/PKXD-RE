@@ -58,6 +58,10 @@ comprar pets ou criar NPCs.
 | `pet`, GetEggDetails=24 | `pet` | EggDetailsResponse, EventId=32, lista vazia |
 | `init_day_night`, vazio | `G` | DayNightStateResponse, IsNight=false, SkipInterpolation=true |
 | `init_pos`, vazio | `C` | Snapshot vazio de posições remotas, comprimido com DEFLATE raw |
+| `fruit`, GetCount=3 | `fruit-quest-count` | GetCountFruitQuestResponse: Count float=1 e Sequence int32=2, ambos zero |
+| `matchmaking`, GetLobbyState=2, LobbyType=2 | `matchmaking_lobby_state` | LobbyStateResponseMessage: TimeLeftMillis=1, TimerState=2, LobbyType=3; estado Waiting, preservando o tipo solicitado |
+| `hwn`, SecondsToEnd=3 | `hwn` | SpecialEventSecondsToEndResponse: EventId=1 vale 3; Seconds=2 vale zero, sem evento sazonal ativo |
+| `referral`, GetLinkInfo=0 | `N` | ReferralLinkResponse: Data=2 presente; Successful=1, ReferralLink=3 vazio, contagens e usuários convertidos vazios |
 
 `Analytics/sessionId` e `Analytics/deviceId` são mensagens de mão única com IDs
 brutos. Não precisam de resposta; o servidor não encaminha nem salva esses IDs.
@@ -126,7 +130,8 @@ fora da sequência. Um teste TCP reproduz a sequência de pedidos suportados do
 log, confere a ordem dos eventos e que mensagens de analytics não geram respostas.
 
 A execução da tela após esta alteração ainda depende de teste no Android.
-Eventos como `fruit`, `matchmaking`, `hwn` e `slot_interaction` continuam
-identificados como não implementados, sem respostas genéricas de sucesso.
-Os logs e a nova lista de etapas na tela indicarão se algum deles se torna uma
-dependência obrigatória antes de abrir a criação do personagem.
+As consultas iniciais de `fruit`, `matchmaking`, `hwn` e `referral` agora têm
+respostas específicas. O [contrato das quatro consultas](entry_services_1_38_4.md)
+registra os métodos nativos, bytes e limites. O cache de `slot_interaction` está
+implementado na [sala local](world_1_38_4.md). Isso não implementa missões de
+frutas, partidas de minigames, recompensas sazonais ou presentes de indicação.

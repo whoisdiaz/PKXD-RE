@@ -23,7 +23,8 @@ PET_STORE_ID = "eggs-store-0_1_86"
 CATALOG_VERSION = "local-bootstrap-1"
 REQUESTS = frozenset(("time", "store_tree", "pet_store_tree", "friends", "pet",
                       "npc/fetch-owned", "game_variable", "Analytics/sessionId", "Analytics/deviceId",
-                      "hair_style", "lb", "init_day_night", "init_pos", "fetch_events", "vhc"))
+                      "hair_style", "lb", "init_day_night", "init_pos", "fetch_events", "vhc",
+                      "fruit", "matchmaking", "hwn", "referral"))
 
 
 def empty_tree(store_id):
@@ -62,6 +63,32 @@ class StartupServices:
 
         request = wire.Proto(payload)
         event_id = request.integer(1)
+        if name == "fruit" and event_id == 3:
+            # GetCountFruitQuestResponse: Count=float field 1, Sequence=int32
+            # field 2. Both are zero in the local world without fruit quests;
+            # proto3 omits default values. The reply has no EventId field.
+            LOG.info("TCP fruit quest count sent count=0 sequence=0")
+            return [("fruit-quest-count", b"")]
+        if name == "matchmaking" and event_id == 2:
+            lobby_type = request.integer(2)
+            if lobby_type not in range(7):
+                raise wire.ProtocolError("Unknown matchmaking lobby type")
+            # TimerState.Waiting=0, TimeLeftMillis=0. Preserve the lobby type:
+            # the native receiver uses it to select the registered callback.
+            LOG.info("TCP matchmaking lobby state sent lobbyType=%d state=waiting", lobby_type)
+            return [("matchmaking_lobby_state", wire.number(3, lobby_type))]
+        if name == "hwn" and event_id == 3:
+            # SpecialEventSecondsToEndResponse uses the same EventId (3).
+            # No seasonal event is active in this local world: Seconds=0.
+            LOG.info("TCP seasonal event time sent seconds=0")
+            return [("hwn", wire.number(1, 3))]
+        if name == "referral" and event_id == 0:
+            # ReferralLinkResponse.Data must be present. Query succeeds with
+            # an empty ReferralLink object, zero counts and no converted users;
+            # this does not create a referral URL or claim a gift.
+            data = wire.number(1, True) + wire.blob(3, b"")
+            LOG.info("TCP local referral information sent count=0")
+            return [("N", wire.blob(2, data))]
         if name == "time" and event_id == 0:
             # CurrentTimeResponse.ctor calls DateTimeOffset.FromUnixTimeSeconds.
             LOG.info("TCP server time sent (Unix seconds)")

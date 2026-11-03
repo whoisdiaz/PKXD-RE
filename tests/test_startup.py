@@ -110,10 +110,56 @@ class StartupContractTests(unittest.TestCase):
             self.handle("time")
         self.assertNotIn(sentinel.decode(), " ".join(logs.output))
 
+    def test_fruit_count_reply_has_no_event_id_or_integer_in_float_field(self):
+        # Native SendGetQuestCount writes EventId=3 (08 03). A zero float count
+        # and zero sequence are omitted by proto3, not encoded as EventId=3.
+        self.assertEqual(self.handle("fruit", bytes.fromhex("0803")),
+                         [("fruit-quest-count", b"")])
+
+    def test_matchmaking_reply_preserves_callback_lobby_and_waiting_timer(self):
+        # LobbyType is field 2 in the request and field 3 in the response.
+        cases = (("0802", ""), ("08021001", "1801"), ("08021002", "1802"),
+                 ("08021003", "1803"), ("08021004", "1804"),
+                 ("08021005", "1805"), ("08021006", "1806"))
+        for request, expected in cases:
+            with self.subTest(request=request):
+                response = self.handle("matchmaking", bytes.fromhex(request))
+                self.assertEqual(response, [("matchmaking_lobby_state", bytes.fromhex(expected))])
+                state = wire.Proto(response[0][1])
+                self.assertEqual((state.integer(1), state.integer(2)), (0, 0))
+        for invalid in ("08021007", "080210ffffffffffffffffff01", "0802120131"):
+            with self.subTest(invalid=invalid), self.assertRaises(wire.ProtocolError):
+                self.handle("matchmaking", bytes.fromhex(invalid))
+
+    def test_no_active_season_returns_seconds_zero_with_response_discriminator(self):
+        self.assertEqual(self.handle("hwn", bytes.fromhex("0803")),
+                         [("hwn", bytes.fromhex("0803"))])
+
+    def test_referral_query_returns_present_data_and_empty_link_without_gifts(self):
+        response = self.handle("referral")
+        self.assertEqual(response, [("N", bytes.fromhex("120408011a00"))])
+        data = wire.Proto(response[0][1]).message(2)
+        self.assertEqual(data.integer(1), 1)
+        self.assertIn(3, data.fields)  # Present object; strings default to empty.
+        self.assertEqual((data.message(3).text(1), data.message(3).text(2)), ("", ""))
+        self.assertEqual((data.integer(4), data.integer(5)), (0, 0))
+        self.assertNotIn(6, data.fields)  # No converted users.
+
+    def test_new_queries_do_not_acknowledge_quests_matches_rewards_or_referral_mutations(self):
+        for name, event_ids in (("fruit", (0, 1, 2, 4, 5, 6)),
+                                ("matchmaking", (0, 1)),
+                                ("hwn", (2, 4, 5, 8, 10, 14, 15, 16, 17)),
+                                ("referral", (1, 2, 4))):
+            for event_id in event_ids:
+                with self.subTest(name=name, event_id=event_id):
+                    self.assertIsNone(self.handle(name, wire.number(1, event_id)))
+
     def test_malformed_requests_and_unhandled_domains_do_not_receive_success(self):
         for name, payload in (("time", b"\x08"), ("store_tree", b"\x12\x20x"),
                               ("store_tree", b""), ("npc/fetch-owned", b"\x08\x01"),
-                              ("store_tree", wire.number(1, 1) + wire.number(2, 1))):
+                              ("store_tree", wire.number(1, 1) + wire.number(2, 1)),
+                              ("fruit", b"\x08"), ("hwn", b"\x0a\x00"),
+                              ("referral", b"\x12\x04x")):
             with self.subTest(name=name), self.assertRaises(wire.ProtocolError):
                 self.handle(name, payload)
         for name in ("fruit", "matchmaking", "hwn", "slot_interaction", "unknown"):

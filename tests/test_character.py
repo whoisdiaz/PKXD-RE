@@ -263,11 +263,41 @@ class CharacterFlowTests(unittest.TestCase):
         self.assertEqual(self.store.user(user["userToken"])["terms"], "")
 
     def test_startup_data_cannot_be_requested_before_game_login(self):
-        with socket.create_connection(self.game.server_address, timeout=3) as sock:
-            sock.sendall(wire.frame(b"\x03"))
-            wire.receive(sock)
-            sock.sendall(wire.frame(wire.event("time", room=True)))
-            self.assertEqual(sock.recv(1), b"")
+        for name, payload in (("time", b""), ("fruit", b"\x08\x03"),
+                              ("matchmaking", b"\x08\x02\x10\x03"),
+                              ("hwn", b"\x08\x03"), ("referral", b"")):
+            with self.subTest(name=name), socket.create_connection(self.game.server_address, timeout=3) as sock:
+                sock.sendall(wire.frame(b"\x03"))
+                wire.receive(sock)
+                sock.sendall(wire.frame(wire.event(name, payload, room=True)))
+                self.assertEqual(sock.recv(1), b"")
+
+    def test_remaining_startup_queries_reply_in_room_before_movement_without_changing_account(self):
+        _, _, user = self.account()
+        sock, transport_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, transport_id)
+        before = self.store.user(user["userToken"])
+        inventory = self.store.inventory(before["id"])
+        # Exact native request bodies; four previously unanswered domains,
+        # interspersed with one-way analytics and client position updates.
+        requests = [("fruit", bytes.fromhex("0803")),
+                    ("Analytics/sessionId", b"local-diagnostic"),
+                    ("matchmaking", bytes.fromhex("08021003")),
+                    ("hwn", bytes.fromhex("0803")), ("referral", b""),
+                    ("C", bytes.fromhex("01ff3f800000400000004040000042b40000"))]
+        sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True)) for name, payload in requests)
+                     + wire.frame(b"\x01"))
+        expected = [("fruit-quest-count", b""), ("matchmaking_lobby_state", b"\x18\x03"),
+                    ("hwn", b"\x08\x03"), ("N", bytes.fromhex("120408011a00"))]
+        for response in expected:
+            packet = wire.receive(sock)
+            self.assertEqual(packet[0], wire.ROOM_EVENT)
+            self.assertEqual(wire.parse_event(packet), response)
+        self.assertEqual(wire.receive(sock), b"\x02")
+        with self.game.lock:
+            self.assertEqual(self.game.world_sessions[transport_id].movement_packets, 1)
+        self.assertEqual(self.store.user(user["userToken"]), before)
+        self.assertEqual(self.store.inventory(before["id"]), inventory)
 
     def test_inventory_bootstrap_contains_default_id_quantity_pairs_and_18_slots(self):
         _, _, user = self.account()

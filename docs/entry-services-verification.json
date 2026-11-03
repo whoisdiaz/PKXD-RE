@@ -1,0 +1,35 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "baseCommit": "1a19b60",
+  "automatedTests": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "passed": 110,
+    "failed": 0,
+    "includesAuthenticatedTcpReplay": true,
+    "includesAllSevenMatchmakingLobbyTypes": true,
+    "includesPreLoginRejection": true,
+    "includesMutationOperationsStillUnsupported": true,
+    "accountAndInventoryUnchangedByQueries": true
+  },
+  "processSmoke": {
+    "diagnosticAgainstActualServerProcessPassed": true,
+    "fourNewStartupQueriesPassed": true,
+    "movementAndKeepalivePassed": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0,
+    "tokensAbsentFromLogs": true
+  },
+  "nativeContracts": [
+    {"requestEvent": "fruit", "requestHex": "0803", "responseEvent": "fruit-quest-count", "responseHex": "", "senderRva": "0x2DEE9B4", "receiverRva": "0x2DEDF48"},
+    {"requestEvent": "matchmaking", "requestHex": "08021003", "responseEvent": "matchmaking_lobby_state", "responseHex": "1803", "senderRva": "0x3041BE4", "receiverRva": "0x3029B04"},
+    {"requestEvent": "hwn", "requestHex": "0803", "responseEvent": "hwn", "responseHex": "0803", "senderRva": "0x3035548", "receiverRva": "0x30362CC"},
+    {"requestEvent": "referral", "requestHex": "", "responseEvent": "N", "responseHex": "120408011a00", "senderRva": "0x23BF7C0", "receiverRva": "0x23BF260"}
+  ],
+  "databaseSchemaChanged": false,
+  "clientMetadataChanged": false,
+  "apkOrNativeLibraryChanged": false,
+  "androidActualRequestIdsCaptured": false,
+  "androidVisualWorldEntryAfterThisChange": "not yet verified",
+  "bucketAvailabilityConfirmed": false
+}
