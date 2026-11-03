@@ -1,11 +1,12 @@
 # PK XD — engenharia reversa
 
-## Etapa 1: lobby local para 1.38.4
+## Etapa 2: contas e personagem local para 1.38.4
 
-O primeiro módulo permite o protocolo `0.2.49` na rota real
-`POST /lobby/allocation` e devolve uma alocação local. A versão **1.38.4** já
-vem habilitada em [`config/versions.json`](config/versions.json).
-Funciona com Python e biblioteca padrão, sem dependências de pip.
+O servidor inicia contas anônimas e lobby em HTTP `127.0.0.1:8080`, além da
+conexão TCP `127.0.0.1:7000` para login e criação do perfil. Salva nome, roupa,
+cor de pele e cabelo em SQLite. A versão **1.38.4**, protocolo `0.2.49`, vem
+habilitada em [`config/versions.json`](config/versions.json).
+Usa Python e biblioteca padrão, sem instalar pacotes pelo pip.
 
 Para instalar no Termux:
 
@@ -24,29 +25,36 @@ Em outra sessão:
 
 ```sh
 curl -sS http://127.0.0.1:8080/health
-curl -sS http://127.0.0.1:8080/lobby/allocation \
-  -H 'Content-Type: application/json' \
-  --data '{"userToken":"local-test","gameServerProtocolVersion":"0.2.49","isPrivate":false}'
+python tools/check_local_character.py
 ```
 
-Para o cliente consultar esse lobby, use o
-[metadata já redirecionado para teste local](client/README.md) no APK
-correspondente. Não é necessário enviar o APK inteiro para essa primeira
-tentativa. A configuração de rede será investigada se o teste apresentar
-um bloqueio de HTTP.
+O diagnóstico cria um jogador de teste e verifica cadastro, login, nome e
+reconexão. A alocação agora exige um token emitido pelas contas locais;
+`userToken: "local-test"` deixa de ser um teste válido do servidor completo.
+
+Para usar **Novo jogador** no APK, instale o
+[novo metadata de contas + lobby](client/README.md). O pacote antigo alterava
+somente o lobby: atualizar o Python não altera o APK já instalado. Não é
+necessário enviar o APK inteiro. A configuração de rede será investigada
+caso o teste no aparelho apresente bloqueio de HTTP.
+
+Os jogadores ficam em `data/players.sqlite3`, preservado em atualizações do
+Git. Faça uma cópia desse arquivo com o servidor parado para guardar as contas.
 
 Para desabilitar a versão, altere `enabled` para `false` em
 `config/versions.json` e reinicie o servidor. A requisição nativa informa o
 protocolo, então outras builds que compartilhem `0.2.49` não podem ser
 distintas por esse pedido sozinho.
 
-O módulo abre somente o lobby HTTP. A porta de jogo anunciada (`7000` no
-exemplo), as sessões e a entrada no mundo pertencem às próximas partes. A
-integração no APK 1.38.4 ainda não foi testada; o APK original não passa a usar
-o servidor local automaticamente. O pedido do cliente leva o protocolo, não a
-versão do aplicativo.
+Esta etapa oferece uma sala isolada de inicialização e o perfil persistente.
+Mundo jogável, catálogo inicial de itens, casas, tutorial completo e demais
+mecânicas continuam para as próximas partes. O teste automatizado usa um
+cliente de protocolo; a tela real do APK 1.38.4 ainda depende de teste no Android.
+O login TCP verifica a versão do aplicativo, além da verificação de protocolo
+no lobby.
 
-[Contrato reconstruído, redirecionamento de metadata e limites da etapa](docs/version_1_38_4.md).
+[Contratos e diagnóstico de contas/personagem](docs/character_1_38_4.md).
+O [estudo da primeira etapa](docs/version_1_38_4.md) permanece como referência histórica.
 
 Testes: `python -m unittest discover -s tests -v`.
 

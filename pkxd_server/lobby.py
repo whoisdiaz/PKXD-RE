@@ -1,10 +1,11 @@
-"""The recovered POST /lobby/allocation contract, without gameplay/auth services."""
+"""HTTP allocation lobby and local anonymous account endpoints."""
 import json
 import logging
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
+from .accounts import AccountError, AUTH, IDENTITIES, POST_ROUTES
 from .version_policy import VersionPolicy
 
 LOG = logging.getLogger(__name__)
@@ -82,14 +83,15 @@ def allocate(payload, destination, policy=None):
 class LobbyServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address, destination, policy=None):
+    def __init__(self, address, destination, policy=None, *, store=None, game=None):
         self.destination = destination
         self.policy = policy if policy is not None else VersionPolicy()
+        self.store, self.game = store, game
         super().__init__(address, LobbyHandler)
 
 
 class LobbyHandler(BaseHTTPRequestHandler):
-    server_version = "PKXDLocalLobby/0.1"
+    server_version = "PKXDLocal/0.2"
 
     def setup(self):
         super().setup()
@@ -98,7 +100,9 @@ class LobbyHandler(BaseHTTPRequestHandler):
     def log_request(self, code="-", size="-"):
         # Do not record tokens, bodies, or query parameters.
         path = self.path.partition("?")[0]
-        route = path if path in (ALLOCATION_PATH, "/health") else "unknown-endpoint"
+        route = path if path in (ALLOCATION_PATH, "/health", IDENTITIES, *POST_ROUTES) else "unknown-endpoint"
+        if path.startswith(AUTH + "/") and self.server.store is not None:
+            route = AUTH + "/<session>"
         LOG.info("%s %s status=%s", self.command, route, code)
 
     def send_json(self, status, payload):
@@ -110,8 +114,27 @@ class LobbyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def account_error(self, error):
+        # FasterErrorResponse fields recovered from the client's DTO.
+        self.send_json(error.status, {"statusCode": error.status, "status": error.code,
+                                      "description": str(error)})
+
     def do_GET(self):
-        if urlsplit(self.path).path != "/health":
+        path = urlsplit(self.path).path
+        if self.server.store is not None and (path == IDENTITIES or path.startswith(AUTH + "/")):
+            try:
+                if path == IDENTITIES:
+                    authorization = self.headers.get("Authorization", "")
+                    token = authorization[7:] if authorization.startswith("Bearer ") else ""
+                    response = self.server.store.get_identities(token)
+                else:
+                    response = self.server.store.get_session(path[len(AUTH) + 1:])
+            except AccountError as error:
+                self.account_error(error)
+            else:
+                self.send_json(200, response)
+            return
+        if path != "/health":
             self.send_json(404, failure("NOT_FOUND", "Unknown endpoint."))
             return
         # Local diagnostic endpoint, not a recovered game API.
@@ -120,11 +143,16 @@ class LobbyHandler(BaseHTTPRequestHandler):
             "targetAppVersion": self.server.policy.app_version,
             "versionEnabled": self.server.policy.enabled,
             "acceptedGameServerProtocolVersion": self.server.policy.protocol if self.server.policy.enabled else None,
-            "gameTransportImplemented": False,
+            "gameTransportImplemented": self.server.game is not None,
+            "anonymousAccountsImplemented": self.server.store is not None,
+            "characterBootstrapImplemented": self.server.game is not None,
+            "worldImplemented": False,
         })
 
     def do_POST(self):
-        if urlsplit(self.path).path != ALLOCATION_PATH:
+        path = urlsplit(self.path).path
+        account_route = path in POST_ROUTES and self.server.store is not None
+        if path != ALLOCATION_PATH and not account_route:
             self.send_json(404, failure("NOT_FOUND", "Unknown endpoint."))
             return
         if self.headers.get("Transfer-Encoding") is not None:
@@ -155,5 +183,17 @@ class LobbyHandler(BaseHTTPRequestHandler):
         except TimeoutError:
             self.send_json(408, failure("INVALID_REQUEST", "Request body timed out."))
             return
-        status, response = allocate(payload, self.server.destination, self.server.policy)
+        try:
+            if account_route:
+                response = self.server.store.post(path, payload)
+                status = 200
+            else:
+                status, response = allocate(payload, self.server.destination, self.server.policy)
+                if response.get("successful") and self.server.store is not None:
+                    self.server.store.user(payload["userToken"])
+        except AccountError as error:
+            if account_route:
+                self.account_error(error)
+                return
+            status, response = error.status, failure(error.code, str(error))
         self.send_json(status, response)

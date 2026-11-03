@@ -10,7 +10,7 @@ class MetadataRedirectTests(unittest.TestCase):
     def setUp(self):
         # Small structural fixture. Only the input checksum is substituted; all
         # offset, overlap, length and preservation checks execute normally.
-        values = list(redirect.LOBBY_LITERALS) + [b"keep-this-other-literal"]
+        values = list(redirect.LOBBY_LITERALS + redirect.ACCOUNT_LITERALS) + [b"keep-this-other-literal"]
         self.values = values
         records = bytearray()
         data = bytearray()
@@ -58,6 +58,17 @@ class MetadataRedirectTests(unittest.TestCase):
         struct.pack_into("<Ii", malformed, 256 + 16, 5, 0)
         with self.assertRaisesRegex(ValueError, "overlaps"):
             self.transform(original=bytes(malformed))
+
+    def test_accounts_are_opt_in_and_only_three_hosts_change(self):
+        old, changes = self.transform()
+        self.assertEqual(len(changes), 2)
+        self.assertIn(redirect.ACCOUNT_LITERALS[0], old)
+        with patch.object(redirect, "ORIGINAL_SHA256", hashlib.sha256(self.original).hexdigest()):
+            result, changes = redirect.redirect_metadata(self.original, "http://127.0.0.1:8080", include_accounts=True)
+        self.assertEqual(len(changes), 3)
+        self.assertNotIn(redirect.ACCOUNT_LITERALS[0], result)
+        self.assertEqual(len(result), len(self.original))
+        self.assertTrue(result.endswith(self.values[-1]))
 
     def test_out_of_range_literal_is_rejected(self):
         malformed = bytearray(self.original)

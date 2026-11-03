@@ -1,0 +1,60 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "pythonVersion": "3.12.14",
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 37,
+    "failed": 0
+  },
+  "processSmoke": {
+    "cliStartedOutsideRepository": true,
+    "diagnosticScriptPassed": true,
+    "sigintExitCode": 0,
+    "profileSurvivedProcessRestart": true,
+    "sessionTokensAbsentFromCapturedLogs": true,
+    "databaseUsed": "temporary test database"
+  },
+  "metadata": {
+    "validationPassed": true,
+    "validationErrors": [],
+    "counts": {
+      "images": 120,
+      "assemblies": 120,
+      "types": 21887,
+      "methods": 146636,
+      "fields": 91798,
+      "parameters": 120436,
+      "properties": 27134,
+      "events": 1124,
+      "generic_parameters": 3539,
+      "generic_containers": 2313,
+      "string_literals": 23281
+    },
+    "onlySelectedLiteralLengthsAndSlotsChanged": true,
+    "inputSha256": "f2e909fe0d8668da323805d2a8cef2d69068b6f114322aedd0d2b3452a24ffde",
+    "outputSha256": "2962fd80a358837c2418b310fb9da8cc3bceea731f9c986dcfe678f758c5f7f8",
+    "modifiedLiteralIndices": [
+      19256,
+      19283,
+      19284
+    ]
+  },
+  "archive": {
+    "path": "client/pkxd-1.38.4-account-local.zip",
+    "sha256": "a9967b86dfebc50e2be4100ec59185beee785220c91418d56969760ace6d1adb",
+    "sizeBytes": 4790730,
+    "zipIntegrityPassed": true,
+    "internalChecksumsPassed": true
+  },
+  "clientValidation": {
+    "androidApkTested": false,
+    "userReportedRequestsAfterNewPlayer": "none beyond version permission",
+    "infiniteLoadingConfirmedResolved": false,
+    "fullWorldImplemented": false
+  },
+  "nativeInputs": {
+    "libil2cppSha256": "32e8e598619d9ff1136a184b39b0c93b19a461b56ef612bb56871072765e6fbe",
+    "dumpSha256": "aa2509394fe6dfb514135b0b70019729c5df6b01f677eba5e61965a7ae282b2c"
+  }
+}

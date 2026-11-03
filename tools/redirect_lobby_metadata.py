@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Redirect only the two production lobby literals in the known v29 metadata.
+"""Redirect the production lobby and, optionally, accounts in known v29 metadata.
 
 Creates a separate file. Does not modify the native library, protocol, account
-hosts, certificate verification, or APK signatures.
+hosts unless --include-accounts is selected, certificate verification, or APK signatures.
 """
 import argparse
 import hashlib
@@ -16,9 +16,11 @@ LOBBY_LITERALS = (
     b"https://pkxd-lobby.aftvrsys.com",
     b"https://pkxd-lobby.playpkxd.com",
 )
+ACCOUNT_LITERALS = (b"https://account-ipv4.faster.aftvrsys.com",)
 
 
-def redirect_metadata(original, url):
+def redirect_metadata(original, url, *, include_accounts=False):
+    targets = LOBBY_LITERALS + (ACCOUNT_LITERALS if include_accounts else ())
     if hashlib.sha256(original).hexdigest() != ORIGINAL_SHA256:
         raise ValueError("Metadata does not match the file analyzed for this project; refusing guessed offsets.")
     if struct.unpack_from("<II", original) != (0xFAB11BAF, 29):
@@ -34,7 +36,7 @@ def redirect_metadata(original, url):
         raise ValueError("Invalid lobby port.") from error
     url = url.rstrip("/")
     replacement = url.encode("ascii")
-    if len(replacement) > min(map(len, LOBBY_LITERALS)):
+    if len(replacement) > min(map(len, targets)):
         raise ValueError("Lobby URL is longer than the original literal slots; use a shorter hostname/URL.")
     literal_offset, literal_size, data_offset, data_size = struct.unpack_from("<IIII", original, 8)
     if literal_size % 8 or literal_offset < 256 or data_offset < 256:
@@ -52,11 +54,11 @@ def redirect_metadata(original, url):
         start = data_offset + relative
         value = original[start:start + length]
         records.append((index, start, start + length))
-        if value in LOBBY_LITERALS:
+        if value in targets:
             selected.append((index, record_offset, start, length, value))
             found.add(value)
-    if found != set(LOBBY_LITERALS):
-        raise ValueError("Both expected production lobby URLs must be present.")
+    if found != set(targets):
+        raise ValueError("All expected production URLs must be present.")
     selected_indices = {r[0] for r in selected}
     for _, _, start, length, _ in selected:
         for index, other_start, other_end in records:
@@ -78,12 +80,13 @@ def main():
     parser.add_argument("input", type=Path, help="Original global-metadata.dat")
     parser.add_argument("output", type=Path, help="Separate output path; existing files are preserved")
     parser.add_argument("--lobby-url", default="http://127.0.0.1:8080")
+    parser.add_argument("--include-accounts", action="store_true", help="Also redirect anonymous account services")
     args = parser.parse_args()
     if args.input.resolve() == args.output.resolve():
         parser.error("Input and output must be different files.")
     try:
         original = args.input.read_bytes()
-        result, changes = redirect_metadata(original, args.lobby_url)
+        result, changes = redirect_metadata(original, args.lobby_url, include_accounts=args.include_accounts)
         with args.output.open("xb") as target:
             target.write(result)
     except (OSError, ValueError) as error:

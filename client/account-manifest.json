@@ -1,0 +1,47 @@
+{
+  "appVersion": "1.38.4",
+  "versionCode": 10370,
+  "gameServerProtocolVersion": "0.2.49",
+  "accountsAndLobbyUrl": "http://127.0.0.1:8080",
+  "gameTcpPort": 7000,
+  "metadataInputSha256": "f2e909fe0d8668da323805d2a8cef2d69068b6f114322aedd0d2b3452a24ffde",
+  "metadataOutputSha256": "2962fd80a358837c2418b310fb9da8cc3bceea731f9c986dcfe678f758c5f7f8",
+  "metadataSizeBytes": 16574496,
+  "modifiedLiteralIndices": [
+    19256,
+    19283,
+    19284
+  ],
+  "changes": [
+    {
+      "literal_index": 19256,
+      "length_offset": 154304,
+      "data_offset": 875262,
+      "old_length": 40,
+      "old_url": "https://account-ipv4.faster.aftvrsys.com",
+      "new_url": "http://127.0.0.1:8080"
+    },
+    {
+      "literal_index": 19283,
+      "length_offset": 154520,
+      "data_offset": 876631,
+      "old_length": 31,
+      "old_url": "https://pkxd-lobby.aftvrsys.com",
+      "new_url": "http://127.0.0.1:8080"
+    },
+    {
+      "literal_index": 19284,
+      "length_offset": 154528,
+      "data_offset": 876662,
+      "old_length": 31,
+      "old_url": "https://pkxd-lobby.playpkxd.com",
+      "new_url": "http://127.0.0.1:8080"
+    }
+  ],
+  "archive": "pkxd-1.38.4-account-local.zip",
+  "archiveSha256": "a9967b86dfebc50e2be4100ec59185beee785220c91418d56969760ace6d1adb",
+  "archiveBytes": 4790730,
+  "androidClientTested": false,
+  "fullWorldImplemented": false,
+  "otherMetadataBytesPreserved": true
+}
