@@ -72,6 +72,14 @@ class StartupContractTests(unittest.TestCase):
         self.assertIsNone(self.handle("pet", b"\x08\x01"))  # Purchase stays unsupported.
         self.assertIsNone(self.handle("pet", wire.number(1, 28) + wire.string(2, "someone-else")))
 
+    def test_observed_pet_operation_16_reads_owner_and_returns_needs_event_21(self):
+        user_id = "12345678-1234-1234-1234-123456789012"
+        request = wire.number(1, 16) + wire.string(2, user_id)
+        self.assertEqual(len(request), 40)
+        self.assertEqual(self.services.handle("pet", request, user_id=user_id, transport_id=7),
+                         [("pet", bytes.fromhex("0815"))])
+        self.assertIsNone(self.handle("pet", request))
+
     def test_analytics_are_one_way_and_ids_are_not_logged(self):
         sentinel = b"private-device-id-do-not-log"
         with self.assertLogs("pkxd_server.startup", level="INFO") as logs:

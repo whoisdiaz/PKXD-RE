@@ -252,6 +252,41 @@ class CharacterFlowTests(unittest.TestCase):
             sock.sendall(wire.frame(wire.event("time", room=True)))
             self.assertEqual(sock.recv(1), b"")
 
+    def test_inventory_bootstrap_contains_default_id_quantity_pairs_and_18_slots(self):
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        values = self.bootstrap(sock, player_id)
+        inventory = values[("tbulv", "p")]
+        self.assertEqual(inventory[0], 6)
+        pairs = list(struct.iter_unpack(">ii", inventory[1:]))
+        self.assertEqual(pairs, [(5, 1), (13, 1), (15, 1), (16, 1), (17, 1), (59, 1), (272, 1), (273, 1), (4636, 1)])
+        equipped = values[("tbulv", "o")]
+        slots = [item[0] for item in struct.iter_unpack(">i", equipped[1:])]
+        self.assertEqual(slots, [0, 0, 0, 0, 4636, 16, 5, 13, 272, 15, 273, 17, 17, 59, 59, 0, 0, 0])
+
+    def test_backpack_initial_query_and_updates_use_success_oneof_and_preserve_ownership(self):
+        _, _, user = self.account()
+        sock, player_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, player_id)
+        sock.sendall(wire.frame(wire.event("backpack", b"\x08\x02", room=True)))
+        self.assertEqual(wire.receive(sock), bytes.fromhex("08086261636b7061636b08021200"))
+        sock.sendall(wire.frame(wire.event("backpack", bytes.fromhex("080212020510"), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        self.assertEqual(name, "backpack")
+        self.assertEqual(wire.Proto(payload).message(2).integers(1), [5, 16])
+        sock.sendall(wire.frame(wire.event("backpack", wire.number(1, 2) + wire.number(2, 123456), room=True)))
+        _, payload = wire.parse_event(wire.receive(sock))
+        response = wire.Proto(payload)
+        self.assertIn(3, response.fields)
+        self.assertNotIn(2, response.fields)
+        self.assertTrue(response.message(3).text(1))
+        sock.sendall(wire.frame(wire.event("backpack", b"\x08\x02", room=True)))
+        _, payload = wire.parse_event(wire.receive(sock))
+        self.assertEqual(wire.Proto(payload).message(2).integers(1), [5, 16])
+        player = self.store.user(user["userToken"])
+        self.assertNotIn(123456, self.store.inventory(player["id"]))
+        self.assertEqual(AccountStore(self.db_path).update_favorites(player["id"], [], []), [5, 16])
+
     def test_prelogin_profile_and_bad_frames_are_closed(self):
         for bad in (struct.pack(">i", -1), struct.pack(">i", wire.MAX_FRAME + 1),
                     wire.frame(wire.event("profile_update", wire.string(2, "NoAuth"), room=True))):

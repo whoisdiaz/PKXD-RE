@@ -12,6 +12,8 @@ import struct
 import threading
 
 from .accounts import AccountError
+from .avatar_defaults import DEFAULT_EQUIPPED_ITEMS
+from .inventory import InventoryServices
 from .startup import REQUESTS, StartupServices
 from . import wire
 
@@ -26,6 +28,7 @@ class GameServer(socketserver.ThreadingTCPServer):
     def __init__(self, address, store, policy):
         self.store, self.policy = store, policy
         self.startup = StartupServices()
+        self.inventory = InventoryServices(store)
         self.ids = itertools.count(1)
         self.lock = threading.Lock()
         self.connections = set()
@@ -121,6 +124,12 @@ class GameHandler(socketserver.BaseRequestHandler):
                         if not self.joined:
                             raise wire.ProtocolError("Room required")
                         self.equip(payload)
+                    elif opcode == wire.ROOM_EVENT and name == "backpack":
+                        if not self.joined:
+                            raise wire.ProtocolError("Room required")
+                        response = self.server.inventory.backpack(payload, player_id=self.player["id"])
+                        if response is not None:
+                            self.emit("backpack", response, room=True)
                     elif opcode == wire.ROOM_EVENT and name in REQUESTS:
                         if not self.joined:
                             raise wire.ProtocolError("Room required")
@@ -191,22 +200,28 @@ class GameHandler(socketserver.BaseRequestHandler):
 
     def bootstrap(self):
         player = self.server.store.player(self.player["id"])
+        inventory = self.server.store.inventory(player["id"])
+        # Inventory.InitInventory consumes alternating item IDs and quantities.
+        inventory_data = b"".join(wire.I32.pack(item_id) + wire.I32.pack(quantity)
+                                  for item_id, quantity in inventory.items())
         values = {
             "k": b"\x01" + player["user_id"].encode(),
             "m": b"\x01" + player["nickname"].encode(),
-            "p": b"\x06",                 # Empty IntList inventory.
-            "o": b"\x06",                 # Empty IntList outfit, until selected by client.
+            "p": b"\x06" + inventory_data,
+            "o": b"\x06" + b"".join(wire.I32.pack(item) for item in DEFAULT_EQUIPPED_ITEMS),
             "wa": b"\x05",                # ByteList containing empty protobuf Money (all zero).
             "j": b"\x05\xd9\xa0\x79",  # ByteList, three RGB bytes; local default.
             "s": b"\x05",                 # Empty ByteList HouseData; no house service yet.
             "i": b"\x03\x00",           # ByteVariable slot, local bootstrap slot zero.
             "hs": b"\x02" + wire.I32.pack(0),
         }
-        values.update({k: bytes.fromhex(v) for k, v in json.loads(player["cosmetics"]).items()})
+        values.update({k: bytes.fromhex(v) for k, v in json.loads(player["cosmetics"]).items()
+                       if not (k == "o" and v == "06")})
         for key, value in values.items():
             self.set_variable(key, value)
         for key in ("k", "m"):
             self.set_variable(key, values[key], global_variable=True)
+        LOG.info("TCP initial inventory sent entries=%d equippedSlots=%d", len(inventory), (len(values["o"]) - 1) // 4)
 
     def cosmetic(self, payload):
         player_id, key, value = wire.parse_variable(payload)

@@ -29,7 +29,8 @@ python tools/check_local_character.py
 ```
 
 O diagnóstico cria um jogador de teste e verifica cadastro, login, horário,
-catálogos de inicialização, nome e reconexão. A alocação exige um token emitido pelas contas locais;
+catálogos de inicialização, inventário, favoritos, nome e reconexão.
+A alocação exige um token emitido pelas contas locais;
 `userToken: "local-test"` deixa de ser um teste válido do servidor completo.
 
 Para usar **Novo jogador** no APK, instale o
@@ -48,10 +49,12 @@ distintas por esse pedido sozinho.
 
 Esta etapa oferece uma sala isolada de inicialização e o perfil persistente.
 Inclui respostas de horário, árvores de loja vazias e consultas iniciais de
-amigos, pets, NPCs e cache de variáveis. Os logs enviados do Android confirmaram
+amigos, pets, NPCs e cache de variáveis. O inventário inicial local contém nove
+itens padrão identificados em AvatarUtils; quantidades e favoritos ficam no SQLite.
+Os logs enviados do Android confirmaram
 cadastro, sessões, alocação e login TCP; a correção das etapas de inicialização
 ainda precisa de novo teste no aparelho.
-Mundo jogável, catálogo inicial de itens, casas, tutorial completo e demais
+Mundo jogável, catálogo completo de produtos, casas, tutorial completo e demais
 mecânicas continuam para as próximas partes. O teste automatizado usa um
 cliente de protocolo; a tela de criação do personagem ainda depende de teste no Android.
 O login TCP verifica a versão do aplicativo, além da verificação de protocolo
@@ -61,6 +64,8 @@ no lobby.
 O [estudo da primeira etapa](docs/version_1_38_4.md) permanece como referência histórica.
 Veja a [correção das etapas de inicialização](docs/startup_1_38_4.md) e a
 [inspeção dos assets enviados](docs/apk-assets-inspection.json).
+O [diagnóstico e a correção de InventoryServiceInitStep](docs/inventory_1_38_4.md)
+explicam o formato do inventário e a atualização das contas existentes.
 
 Testes: `python -m unittest discover -s tests -v`.
 

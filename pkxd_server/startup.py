@@ -106,6 +106,11 @@ class StartupServices:
                 reply = wire.number(1, 8) + wire.number(2, True)
             elif event_id == 6:  # GetCache -> GetPetsCacheResponse.
                 reply = wire.number(1, 7)
+            elif event_id == 16:  # GetPetNeedsRequest -> PetNeedDataResponse.
+                if request.text(2) not in ("", user_id):
+                    LOG.info("TCP unsupported remote pet needs lookup")
+                    return None
+                reply = wire.number(1, 21)
             elif event_id == 28:  # GetAllRemotePetsRequest -> response event 36.
                 ids = request.texts(2)
                 if any(value != user_id for value in ids):

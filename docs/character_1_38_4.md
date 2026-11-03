@@ -94,9 +94,10 @@ Tags usadas: string 1, int32 BE 2, byte 3, ByteList 5, IntList 6.
 O formato de `tbulvb` é diferente e não é usado aqui.
 
 HasReceivedAllImportantVariables (`0x23BDCEC`) consulta `p,o,wa,j,s,i,hs`.
-O bootstrap envia inventário/roupa vazios, saldo zero, RGB local padrão,
-casa vazia, slot byte zero e cabelo zero, além de UUID e nome. São valores
-iniciais deste servidor, sem IDs de itens iniciais inventados.
+O bootstrap envia inventário com pares de ID/quantidade e os 18 slots de roupa
+padrão, saldo zero, RGB local padrão, casa vazia, slot byte zero e cabelo zero,
+além de UUID e nome. Os IDs padrão do avatar vieram de AvatarUtils; a política
+de concessão é local, conforme a [correção de inventário](inventory_1_38_4.md).
 O construtor ToxicBirdRemotePlayerServerState (`0x2DE7F54`) confirma `s` como
 ByteList de HouseData e `i` como ByteVariable; `hs` é IntVariable.
 
@@ -139,6 +140,6 @@ oficial armazenado, assets de 2023 indisponíveis ou outros serviços pendentes
 precisam ser identificados no aparelho. Os testes do servidor não comprovam
 que o carregamento na tela foi resolvido.
 
-Ficam para próximas partes: mundo/sincronização, casas, catálogo e itens iniciais,
+Ficam para próximas partes: mundo/sincronização, casas, catálogo completo de produtos,
 tutorial completo, economia, compras e contas por e-mail. Eventos ausentes são
 registrados como `unsupported`; não recebem sucesso genérico.

@@ -57,7 +57,14 @@ def check(host, port):
             for _ in range(11):
                 name, payload = wire.parse_event(wire.receive(sock))
                 if name == "tbulv":
-                    received.add(wire.parse_variable(payload)[1])
+                    _, key, value = wire.parse_variable(payload)
+                    received.add(key)
+                    if key == "p":
+                        if value[:1] != b"\x06" or len(value) <= 1 or (len(value) - 1) % 8:
+                            raise ValueError("Inventário inicial ausente ou sem pares ID/quantidade")
+                        if any(wire.I32.unpack(value[offset:offset + 4])[0] <= 0
+                               for offset in range(1, len(value), 4)):
+                            raise ValueError("ID ou quantidade inválida no inventário inicial")
             if not expected <= received:
                 raise ValueError("Faltaram variáveis do personagem inicial")
             return sock, response
@@ -85,6 +92,16 @@ def check(host, port):
                   or response.message(4 if expected == "PST" else 3).text(1) != store_id):
                 raise ValueError("Catálogo de inicialização não confirmado")
         print("OK: horário do servidor e catálogos locais de inicialização")
+        sock.sendall(wire.frame(wire.event("backpack", b"\x08\x02", room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        favorites = wire.Proto(payload)
+        if name != "backpack" or favorites.integer(1) != 2 or 2 not in favorites.fields:
+            raise ValueError("Resposta inicial de favoritos não confirmada")
+        sock.sendall(wire.frame(wire.event("pet", wire.number(1, 16) + wire.string(2, user["userId"]), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        if name != "pet" or wire.Proto(payload).integer(1) != 21:
+            raise ValueError("Resposta de necessidades de pets não confirmada")
+        print("OK: inventário inicial, favoritos da mochila e necessidades de pets")
         nickname = "Local" + secrets.token_hex(4)
         sock.sendall(wire.frame(wire.event("profile_update", wire.string(2, nickname), room=True)))
         name, payload = wire.parse_event(wire.receive(sock))

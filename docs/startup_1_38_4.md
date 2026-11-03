@@ -7,6 +7,11 @@ em AcceptanceOfTermsFlowInitStep, ServerTimeServiceInitStep e StoreTreeInitStep.
 Isso substitui a hipótese anterior de falha no redirecionamento de contas para
 essa tentativa: o fluxo já chegou às contas locais e à conexão de jogo.
 
+No teste seguinte, horário e árvores de loja receberam respostas e a tela
+passou a mostrar somente InventoryServiceInitStep. A [correção de inventário](inventory_1_38_4.md)
+substitui o inventário vazio por defaults locais identificados no binário e
+implementa favoritos e a consulta de necessidades dos pets.
+
 ## Atualização no Termux
 
 Pare o servidor com Ctrl+C e execute:
@@ -45,6 +50,7 @@ comprar pets ou criar NPCs.
 | `game_variable`, GetCache=3 | `q` | GameVariablesCacheResponse com Variables e States vazios |
 | `pet`, List=0 | `pet` | GetPetsResponse, EventId=8, Successful no campo 2, Pets vazios |
 | `pet`, GetCache=6 | `pet` | GetPetsCacheResponse, EventId=7, pets/ovos vazios |
+| `pet`, GetPetNeedData=16 | `pet` | PetNeedDataResponse, EventId=21, Needs vazios para a conta local sem pets |
 | `pet`, GetAllRemotePets=28 | `pet` | GetAllRemotePetsResponse, EventId=36, consulta inicial do próprio jogador |
 
 `Analytics/sessionId` e `Analytics/deviceId` são mensagens de mão única com IDs
@@ -61,8 +67,8 @@ extraídos de StoreTreeConstants, incluindo `avatar-store-0_2_49` e
 `houses-store-0_2_05`. O catálogo especial de pets usa `eggs-store-0_1_86`.
 IDs desconhecidos recebem falha explícita. O objeto StoreTree é sempre enviado,
 inclusive na resposta de erro, porque o cliente o acessa antes de notificar a
-etapa de inicialização. Os catálogos são locais e vazios: produtos, preços,
-inventário inicial e compras continuam pendentes.
+etapa de inicialização. Os catálogos são locais e vazios: produtos, preços e
+compras continuam pendentes; o inventário inicial usa a política local documentada.
 
 As respostas de termos existentes permanecem no evento `Q`, com ação GET/SET.
 Agora o console registra o ID do pedido de perfil e a ação retornada para ajudar

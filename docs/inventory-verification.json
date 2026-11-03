@@ -1,0 +1,86 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "pythonVersion": "3.12.14",
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 57,
+    "failed": 0
+  },
+  "processSmoke": {
+    "updatedDiagnosticPassed": true,
+    "inventoryNonemptyAndIdQuantityPairsChecked": true,
+    "favoritesAndPetNeedsChecked": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0
+  },
+  "reportedAndroidBeforeFix": {
+    "pendingStep": "InventoryServiceInitStep",
+    "petUnsupportedOperation": 16,
+    "backpackRequestBytes": 2
+  },
+  "nativeCause": {
+    "predicateRva": "0x3288E4C",
+    "getterInterfaceSlot": 15,
+    "condition": "UserInventory != null && UserInventory.Count > 0",
+    "inventoryDecoderRva": "0x2C76EE0",
+    "integerListLayout": "alternating item ID and quantity; int32 big-endian"
+  },
+  "localStarterPolicy": {
+    "version": "native-avatar-defaults-v1",
+    "itemIds": [
+      5,
+      13,
+      15,
+      16,
+      17,
+      59,
+      272,
+      273,
+      4636
+    ],
+    "quantityPerItem": 1,
+    "equippedSlots": [
+      0,
+      0,
+      0,
+      0,
+      4636,
+      16,
+      5,
+      13,
+      272,
+      15,
+      273,
+      17,
+      17,
+      59,
+      59,
+      0,
+      0,
+      0
+    ],
+    "source": "AvatarUtils constants and .cctor RVA 0x2EC9CD4, ItemSlot enum",
+    "originalProductionGrantRecovered": false
+  },
+  "migration": {
+    "newTables": [
+      "player_inventory",
+      "inventory_seeds",
+      "player_favorites"
+    ],
+    "legacySessionNameAppearancePreserved": true,
+    "customInventoryPreserved": true,
+    "seedNotDuplicatedOnRestart": true,
+    "accountResetRequired": false
+  },
+  "responseChecks": {
+    "emptyBackpackFavoriteSuccessHex": "08021200",
+    "favoriteOwnershipEnforced": true,
+    "petNeedsResponseHex": "0815",
+    "petNeedsOwnerChecked": true
+  },
+  "newUploadsRequiredForThisFix": [],
+  "clientMetadataChanged": false,
+  "androidAfterThisChange": "pending user retest"
+}
