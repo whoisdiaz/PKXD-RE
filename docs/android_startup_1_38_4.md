@@ -1,4 +1,4 @@
-# Animação e captura de erro na entrada — PK XD 1.38.4
+# Animação e captura de mensagens na entrada — PK XD 1.38.4
 
 O teste Android da revisão `31f1937` confirmou cache de slots, tabela de evolução
 de pets, listas de veículos próprios/no mundo e um pacote de posição do avatar.
@@ -63,15 +63,24 @@ No Termux:
 
 ```sh
 pkg install android-tools
-adb pair IP:PORTA_DE_PAREAMENTO
-adb connect IP:PORTA_DE_CONEXAO
+read -r -p "Porta da janela de pareamento: " pkxd_pair_port
+adb pair "127.0.0.1:$pkxd_pair_port"
+```
+
+Mantenha Configurações e Termux em tela dividida. Abra **Parear dispositivo
+com código** e digite somente a porta (os números após `:`) no primeiro prompt.
+Digite o código quando o adb pedir. Após parear, volte à tela principal de
+Depuração sem fio:
+
+```sh
+read -r -p "Porta da tela principal de Depuração sem fio: " pkxd_connect_port
+adb connect "127.0.0.1:$pkxd_connect_port"
 adb devices
 ```
 
-Use o IP/porta mostrados em **Parear dispositivo com código** no comando
-`adb pair` e digite o código no prompt do adb. Use o IP/porta da tela principal
-de Depuração sem fio no `adb connect`. As duas portas normalmente são diferentes.
-O comando `adb devices` deve mostrar uma conexão autorizada com estado `device`.
+As duas portas normalmente são diferentes. O endereço `127.0.0.1` refere-se
+ao próprio celular. `adb devices` deve mostrar uma conexão autorizada com
+estado `device`. Se o adb já estiver conectado, vá diretamente à captura.
 
 Atualize o repositório e reinicie `python server.py` em uma sessão do Termux.
 Abra o PK XD e deixe-o no menu. Em uma segunda sessão, execute:
@@ -81,18 +90,37 @@ cd ~/PKXD-RE
 python tools/capture_android_startup.py
 ```
 
-Volte ao jogo e toque em **Jogar** durante os 45 segundos da captura. Ao terminar,
+Volte ao jogo e toque em **Jogar** durante os 60 segundos da captura. Aguarde
+até o comando terminar, inclusive se o jogo voltar ao menu. Ao terminar,
 o script imprime o relatório e o salva em `data/android-startup.txt`, ignorado
-pelo Git. Ctrl+C encerra e salva o que já chegou. `--seconds 90` amplia a janela;
+pelo Git. Ctrl+C salva uma captura parcial e sua duração fica no relatório.
+`--seconds 90` amplia a janela;
 `--serial IP:PORTA` seleciona uma conexão quando há mais de uma em `adb devices`.
 
-O script consulta o PID de `com.movile.playkids.pkxd` e pede apenas erros das
-tags Unity e AndroidRuntime desse processo. Preserva o início/final até 64 KiB,
-remove parâmetros de URLs e oculta tokens/UUIDs em formatos conhecidos. Não
-coleta logs de outros processos nem altera o APK. Mantenha o aplicativo aberto
-antes de iniciar a captura, para que seu PID exista.
+O script consulta o PID de `com.movile.playkids.pkxd` e captura as mensagens
+desse processo em todos os níveis. Inclui até 500 linhas recentes de histórico,
+pois a falha pode ter ocorrido antes de iniciar o comando. O relatório informa
+horário inicial, duração, motivo do encerramento, número de linhas e se o PID
+continuava ativo ao final. Um PID diferente é reportado, mas o leitor não passa
+a seguir automaticamente esse novo processo.
+
+São preservados o início/final até 64 KiB e até 16 KiB de trechos relacionados
+a inicialização/erro com contexto, inclusive quando estão no meio de um log
+grande. As linhas são sanitizadas antes do corte; parâmetros de URLs e
+tokens/UUIDs em formatos conhecidos são ocultados. A captura continua
+restrita ao PID do aplicativo. Mantenha o PK XD aberto antes de iniciar o
+comando, para que seu PID exista. A opção `--errors-only` restaura o filtro
+anterior Unity:E/AndroidRuntime:E, que pode omitir avisos e mensagens de espera.
+
+Essa ampliação foi feita depois de uma tentativa na revisão `a06a94c`:
+o servidor aceitou `aaa`, recebeu posição e respondeu aos veículos, mas o jogo
+voltou ao menu e a captura anterior terminou por Ctrl+C sem erros registrados.
+Esse resultado não permite concluir que o APK não tenha falhado nem que a
+interrupção tenha ocorrido antes da falha. Se o leitor ADB perder a conexão,
+o relatório agora preserva as mensagens recebidas e informa o status do leitor.
 
 Compartilhe o texto do relatório, sobretudo as linhas de **PlayerCreation**,
 **Game initialization failed**, **Exception** ou **Addressables** e suas pilhas.
-Se o relatório disser que nenhum erro foi capturado, esse também é um resultado
-útil: o próximo diagnóstico precisará de outra fonte de evidência.
+Se não houver mensagens, envie também o cabeçalho com a contagem de linhas e
+o estado do PID/ADB. Isso distingue uma coleta vazia de uma coleta em que os
+logs foram recebidos, mas não houve uma exceção registrada.

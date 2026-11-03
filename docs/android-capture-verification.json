@@ -1,0 +1,35 @@
+{
+  "reportedAndroidBaseCommit": "a06a94c",
+  "reportedAttempt": {
+    "animationAccepted": true,
+    "positionReceived": true,
+    "vehicleQueriesAnswered": true,
+    "userConfirmedReturnToMenu": true,
+    "previousCaptureReportedNoUnityErrors": true,
+    "previousCaptureStoppedByCtrlC": true,
+    "actualCaptureDurationKnown": false,
+    "exactClientFailureKnown": false
+  },
+  "captureChanges": {
+    "defaultSeconds": 60,
+    "processScope": "PID returned for com.movile.playkids.pkxd",
+    "defaultLogFilter": "*:V",
+    "historyLinesRequested": 500,
+    "errorsOnlyModeAvailable": true,
+    "startTimestampAndElapsedDurationReported": true,
+    "earlyInterruptionReported": true,
+    "finalPidStateReported": true,
+    "startupContextFromMiddleOfLongLogPreserved": true,
+    "knownCredentialsRedactedBeforeClipping": true,
+    "partialLogsKeptOnAdbReaderFailure": true
+  },
+  "tests": {
+    "command": "python -m unittest discover -s tests -p test_android_capture.py -v",
+    "passed": 11,
+    "failed": 0,
+    "usesFakeAdbForProcessTests": true
+  },
+  "gameProtocolChanged": false,
+  "databaseOrApkChanged": false,
+  "updatedCaptureOnUserDevice": "pending user run"
+}
