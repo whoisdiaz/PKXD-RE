@@ -1,0 +1,32 @@
+{
+  "sourceCapture": {
+    "collectedLines": 2780,
+    "linesMentioningUnity": 1547,
+    "pid": 13516,
+    "elapsedSeconds": 29.3,
+    "sameProcessAtEnd": true,
+    "managedInitStepMessagesPresent": true,
+    "lastRetainedList": "LoginInitStepList completed",
+    "gameInitializationExceptionPresentInSharedSummary": false,
+    "sourceLogMiddleWasClipped": true
+  },
+  "fixedCollectorBehavior": {
+    "errorsKeptSeparatelyFromRoutineInfo": true,
+    "routineStackFramesExcludedFromTimeline": true,
+    "completeSanitizedSiblingFileSaved": true,
+    "completeSiblingFileSizeClipping": false,
+    "existingBufferDumpWithoutReplay": true,
+    "historicalPidMayBeSelected": true,
+    "gameOrApkChanged": false
+  },
+  "tests": {
+    "command": "python -m unittest discover -s tests -p test_android_capture.py -v",
+    "passed": 14,
+    "failed": 0,
+    "includesEarlyFailureFollowedBy2000RoutineInitStacks": true,
+    "includesFullFileMiddleRetentionAndRedaction": true,
+    "includesHistoricalPidBufferDump": true
+  },
+  "actualWorldFailureCauseKnown": false,
+  "recoveringUserDeviceBuffer": "pending user run"
+}

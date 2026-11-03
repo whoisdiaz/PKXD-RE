@@ -109,9 +109,13 @@ horário inicial, duração, motivo do encerramento, número de linhas e se o PI
 continuava ativo ao final. Um PID diferente é reportado, mas o leitor não passa
 a seguir automaticamente esse novo processo.
 
-São preservados o início/final até 64 KiB e até 16 KiB de trechos relacionados
-a inicialização/erro com contexto, inclusive quando estão no meio de um log
-grande. As linhas são sanitizadas antes do corte; parâmetros de URLs e
+O arquivo `android-startup-full.txt`, na mesma pasta do relatório, conserva
+todas as linhas sanitizadas recebidas, sem o corte de tamanho aplicado ao resumo.
+O console e `android-startup.txt` mostram um resumo: início/final até 64 KiB,
+erros/exceções com contexto até 16 KiB e uma linha do tempo de inicialização
+separada até 16 KiB. Logs rotineiros posteriores não expulsam o trecho de erro
+dessa área prioritária, e frames repetidos de InitStep não viram novos eventos.
+As linhas são sanitizadas antes do corte; parâmetros de URLs e
 tokens/UUIDs em formatos conhecidos são ocultados. A captura continua
 restrita ao PID do aplicativo. Mantenha o PK XD aberto antes de iniciar o
 comando, para que seu PID exista. A opção `--errors-only` restaura o filtro
@@ -124,7 +128,35 @@ Esse resultado não permite concluir que o APK não tenha falhado nem que a
 interrupção tenha ocorrido antes da falha. Se o leitor ADB perder a conexão,
 o relatório agora preserva as mensagens recebidas e informa o status do leitor.
 
-Compartilhe o texto do relatório, sobretudo as linhas de **PlayerCreation**,
+Depois de habilitar o logger, uma captura recebeu 2780 linhas, 1547 mencionando
+Unity, mas o coletor anterior manteve apenas o início/final e um resumo ocupado
+por pilhas rotineiras do login. Esse erro de retenção podia remover o ponto de
+falha do relatório compartilhado. A separação de erros e o arquivo completo
+corrigem essa perda; a exceção específica do APK ainda precisa ser recuperada.
+
+## Recuperar a tentativa já existente no buffer
+
+Com o adb conectado, `--dump` lê o buffer disponível e termina imediatamente.
+`--pid` permite selecionar o PID da captura anterior, inclusive se o aplicativo
+já tiver encerrado. Exemplo para o PID 13516 da captura enviada:
+
+```sh
+python tools/capture_android_startup.py --dump --pid 13516 --output ~/storage/downloads/pkxd-diagnostico.txt
+```
+
+Envie **Download/pkxd-diagnostico-full.txt**. O arquivo sem `-full` é o resumo.
+Os buffers do Android são circulares: um registro antigo pode já ter sido
+substituído por mensagens novas. Se o buffer do PID antigo vier vazio, abra o
+jogo no menu e faça uma nova captura, gravando também na pasta Download:
+
+```sh
+python tools/capture_android_startup.py --seconds 60 --output ~/storage/downloads/pkxd-diagnostico.txt
+```
+
+Toque em Jogar durante essa captura. Não é preciso reinstalar novamente a lib
+quando as mensagens C# de InitStep já estão chegando.
+
+Compartilhe o arquivo completo, sobretudo as linhas de **PlayerCreation**,
 **Game initialization failed**, **Exception** ou **Addressables** e suas pilhas.
 Se não houver mensagens, envie também o cabeçalho com a contagem de linhas e
 o estado do PID/ADB. Isso distingue uma coleta vazia de uma coleta em que os

@@ -48,5 +48,6 @@
   "clientMetadataChanged": false,
   "appAutomaticallyInstalledOrSigned": false,
   "libraryCheckedAgainstInstalledUserApk": "pending user run",
-  "managedLogsOnUserDevice": "pending user install with MT Manager"
+  "managedLogsOnUserDevice": "confirmed by uploaded capture: 1547 lines mentioning Unity, including C# InitStep messages",
+  "worldInitializationExceptionInSharedSummary": "not available; summary clipped the middle of the capture"
 }

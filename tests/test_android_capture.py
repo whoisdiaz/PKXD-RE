@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 
-from tools.capture_android_startup import MAX_CAPTURE, capture, focus_capture, read_capture, redact
+from tools.capture_android_startup import MAX_CAPTURE, capture, focus_capture, read_capture, redact, save_full_capture
 
 
 class AndroidCaptureTests(unittest.TestCase):
@@ -38,10 +38,10 @@ class AndroidCaptureTests(unittest.TestCase):
             text = read_capture(stream)
         self.assertNotIn("TOP-SECRET", text)
 
-    def fake_adb(self, root, *, wait=False, missing_pid=False, empty=False, changed_pid=False, errors_only=False, reader_failure=False):
+    def fake_adb(self, root, *, wait=False, missing_pid=False, empty=False, changed_pid=False, errors_only=False, reader_failure=False, dump=False):
         script = root / "fake_adb.py"
         filters = ["Unity:E", "AndroidRuntime:E", "*:S"] if errors_only else ["*:V"]
-        expected = ['logcat', '-T', '500', '--pid', '321', '-v', 'threadtime'] + filters
+        expected = ['logcat'] + (['-d'] if dump else ['-T', '500']) + ['--pid', '321', '-v', 'threadtime'] + filters
         script.write_text(
             "import sys,time\nfrom pathlib import Path\n"
             "args=sys.argv[1:]\n"
@@ -74,6 +74,9 @@ class AndroidCaptureTests(unittest.TestCase):
             self.assertIn("Loading local avatar", output.read_text())
             self.assertIn("mesmo processo ativo", output.read_text())
             self.assertNotIn("private-capture-token", output.read_text() + console.getvalue())
+            full = output.with_name("startup-full.txt").read_text()
+            self.assertIn("NullReferenceException", full)
+            self.assertNotIn("private-capture-token", full)
 
     def test_timeout_saves_errors_already_received(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -138,3 +141,40 @@ class AndroidCaptureTests(unittest.TestCase):
             self.assertIn("NullReferenceException", output.read_text())
             self.assertIn("status 1", output.read_text())
             self.assertIn("device offline", output.read_text())
+
+    def test_routine_init_stacks_cannot_evict_earlier_game_failure(self):
+        # Regression from the Android capture: routine InitStep stack traces
+        # matched the old keyword filter and displaced the failure from focus.
+        with tempfile.TemporaryFile() as stream:
+            stream.write(b"11-03 05:57:55.100 321 322 E Unity : [GameController] Game initialization failed: MissingReferenceException\n")
+            for _ in range(2000):
+                stream.write(b"11-03 05:58:00.100 321 322 I Unity : [InitStep] List:DownloadStoreInitStep completed\n")
+                stream.write(b"11-03 05:58:00.100 321 322 I Unity : Multiplayer.Game.InitStep.AInitStep:OnAfterRunStep(Action, DeadlockMonitor)\n")
+            focus, _, _ = focus_capture(stream)
+        self.assertIn("Game initialization failed: MissingReferenceException", focus)
+        self.assertIn("DownloadStoreInitStep completed", focus)
+        self.assertLess(focus.count("OnAfterRunStep"), 12)
+
+    def test_full_file_preserves_middle_and_redacts_before_writing(self):
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryFile() as stream:
+            stream.write(b"before\n" * MAX_CAPTURE)
+            stream.write(b"Unity E CENTRAL-FAILURE token=private-full-token\n")
+            stream.write(b"after\n" * MAX_CAPTURE)
+            self.assertNotIn("CENTRAL-FAILURE", read_capture(stream))
+            output = Path(temp) / "complete.txt"
+            save_full_capture(stream, output, header="full capture")
+            saved = output.read_text()
+            self.assertIn("CENTRAL-FAILURE", saved)
+            self.assertNotIn("private-full-token", saved)
+            self.assertGreater(output.stat().st_size, MAX_CAPTURE)
+
+    def test_dump_can_recover_historical_pid_without_running_app_or_playing_again(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output = root / "startup.txt"
+            console = io.StringIO()
+            with contextlib.redirect_stdout(console):
+                capture(self.fake_adb(root, missing_pid=True, dump=True), 1, output, dump=True, pid=321)
+            self.assertIn("buffer consultado", output.read_text())
+            self.assertIn("NullReferenceException", output.read_text())
+            self.assertNotIn("Agora volte ao jogo", console.getvalue())
