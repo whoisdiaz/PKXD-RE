@@ -135,6 +135,18 @@ class StartupContractTests(unittest.TestCase):
         self.assertEqual(self.handle("hwn", bytes.fromhex("0803")),
                          [("hwn", bytes.fromhex("0803"))])
 
+    def test_observed_seasonal_xp_query_returns_present_reward_for_native_callbacks(self):
+        # SendGetEventXp sends 08 07. An EventId-only reply leaves XpReward
+        # null in C# and is unsafe for DailyGiftController/EventPassModel.
+        for _ in range(2):
+            response = self.handle("hwn", bytes.fromhex("0807"))
+            self.assertEqual(response, [("hwn", bytes.fromhex("08071200"))])
+            message = wire.Proto(response[0][1])
+            self.assertEqual(message.integer(1), 7)
+            self.assertIn(2, message.fields)
+            reward = message.message(2)
+            self.assertEqual([reward.integer(field) for field in (1, 2, 3, 4)], [0, 0, 0, 0])
+
     def test_referral_query_returns_present_data_and_empty_link_without_gifts(self):
         response = self.handle("referral")
         self.assertEqual(response, [("N", bytes.fromhex("120408011a00"))])

@@ -1,0 +1,41 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "baseCommit": "37bb4c1",
+  "reportedAndroid": {
+    "unsupportedEvent": "hwn",
+    "requestEventId": 7,
+    "requestBytes": 2,
+    "matchmakingLobbyType": 2,
+    "movementPackets": 1,
+    "animationUpdates": 1,
+    "durationSeconds": 11,
+    "disconnectRootCauseConfirmed": false
+  },
+  "nativeEvidence": {
+    "sender": "ToxicBirdSpecialEventMechanic.SendGetEventXp",
+    "senderRva": "0x3035A44",
+    "responseType": "GetSpecialEventXPResponse",
+    "responseEventIdField": 1,
+    "xpRewardField": 2,
+    "eventPassCallbackRva": "0x1E7F518",
+    "dailyGiftCallbackRva": "0x251C6D8",
+    "callbacksRequirePresentXpReward": true,
+    "requestHex": "0807",
+    "responseHex": "08071200"
+  },
+  "validation": {
+    "unittestCommand": "python3 -m unittest discover -s tests -q",
+    "testsPassed": 111,
+    "testsFailed": 0,
+    "authenticatedTcpReplayIncludesObservedXpRequest": true,
+    "processSmokePassed": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0,
+    "accountAndInventoryUnchangedByQueries": true,
+    "androidVisualWorldEntryAfterThisFix": "not yet verified"
+  },
+  "databaseSchemaChanged": false,
+  "clientMetadataChanged": false,
+  "apkChanged": false
+}

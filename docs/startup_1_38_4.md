@@ -61,6 +61,7 @@ comprar pets ou criar NPCs.
 | `fruit`, GetCount=3 | `fruit-quest-count` | GetCountFruitQuestResponse: Count float=1 e Sequence int32=2, ambos zero |
 | `matchmaking`, GetLobbyState=2, LobbyType=2 | `matchmaking_lobby_state` | LobbyStateResponseMessage: TimeLeftMillis=1, TimerState=2, LobbyType=3; estado Waiting, preservando o tipo solicitado |
 | `hwn`, SecondsToEnd=3 | `hwn` | SpecialEventSecondsToEndResponse: EventId=1 vale 3; Seconds=2 vale zero, sem evento sazonal ativo |
+| `hwn`, GetXp=7 | `hwn` | GetSpecialEventXPResponse: EventId=1 vale 7; XpReward=2 presente com XP/cap diário zero |
 | `referral`, GetLinkInfo=0 | `N` | ReferralLinkResponse: Data=2 presente; Successful=1, ReferralLink=3 vazio, contagens e usuários convertidos vazios |
 
 `Analytics/sessionId` e `Analytics/deviceId` são mensagens de mão única com IDs

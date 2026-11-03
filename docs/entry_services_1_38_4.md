@@ -2,7 +2,7 @@
 
 Os logs do Android mostravam `fruit` (2 bytes), `matchmaking` (4 bytes), `hwn`
 (2 bytes) e `referral` (corpo vazio) sem tratamento após o login. Esta alteração
-implementa quatro consultas desses domínios em `StartupServices`, usando os
+implementa consultas desses quatro domínios em `StartupServices`, usando os
 serializadores e leitores da lib ARM64 fornecida. São respostas reais de sala,
 opcode 8, depois da autenticação e da entrada na sala.
 
@@ -13,6 +13,7 @@ opcode 8, depois da autenticação e da entrada na sala.
 | Contagem de missões de frutas | `08 03` | `fruit-quest-count` | mensagem vazia |
 | Estado da fila, exemplo FreezingFun (3) | `08 02 10 03` | `matchmaking_lobby_state` | `18 03` |
 | Segundos restantes do evento sazonal | `08 03` | `hwn` | `08 03` |
+| XP sazonal (pedido observado no aparelho) | `08 07` | `hwn` | `08 07 12 00` |
 | Informação de indicação | mensagem vazia | `N` | `12 04 08 01 1A 00` |
 
 `GetCountFruitQuestResponse` contém Count **float** no campo 1 e Sequence int32
@@ -28,7 +29,18 @@ minigames continuam sem implementação.
 
 `SpecialEventSecondsToEndResponse` usa SpecialEventType.SecondsToEnd=3 no
 campo 1 e Seconds int64 no campo 2. Zero representa a política local sem evento
-sazonal ativo. Só essa consulta de `hwn` foi implementada nesta alteração.
+sazonal ativo.
+
+O teste no Android com `37bb4c1` identificou `hwn` **EventId=7**, uma consulta
+de XP que a revisão anterior ainda não respondia. A operação 3 de tempo não
+responde por essa consulta. `SendGetEventXp` envia SpecialEventRequestMessage
+com GetXp=7; o leitor recebe GetSpecialEventXPResponse no mesmo evento `hwn`.
+Essa resposta contém EventId=1 e **XpReward no campo 2**. O objeto precisa estar
+presente, pois os callbacks de DailyGiftController e EventPassModel o acessam
+diretamente. Só enviar `08 07` deixa XpReward nulo; a resposta local é
+`08 07 12 00`, com a submensagem presente e seus campos int32 em zero:
+CurrentXp=1, EarnedXp=2, XpCap=3 e XpCollectedToday=4. É uma consulta sem
+concessão de XP ou alteração de conta; não há evento sazonal ativo localmente.
 
 `ReferralLinkResponse.Data` precisa existir. O campo Data=2 contém Successful=1
 e um objeto ReferralLink vazio no campo 3. A consulta é concluída com URL/status
@@ -37,8 +49,12 @@ ClaimSenderGift e CreateUserReferralLink continuam sem implementação.
 
 O log antigo informa apenas nome/tamanho desses pedidos, exceto o corpo vazio
 de indicação. Os IDs e campos acima vêm dos métodos nativos; não houve captura
-dos corpos reais desses três pedidos no aparelho. Compatibilidade com o
-contrato não prova que todos eram dependências obrigatórias da cena.
+dos corpos reais desses três pedidos no aparelho. O log posterior confirmou a
+fila tipo 2 e a operação sazonal 7 pelo parser do servidor. Também confirmou as
+respostas de frutas e indicação e a recepção de posição/animação, seguida de
+desconexão após 11 segundos. Isso não identifica a causa exata do retorno ao
+menu. Compatibilidade com o contrato não prova que todas essas consultas eram
+dependências obrigatórias da cena.
 
 ## Evidência na lib ARM64
 
@@ -52,8 +68,11 @@ contrato não prova que todos eram dependências obrigatórias da cena.
 | ProtobufMatchmakingMechanic.HandleLobbyStateUpdatedEvent | `0x3029B04` | Callback indexado pelo LobbyType recebido |
 | LobbyStateUpdatedResponse.ctor | `0x3042274` | Converte TimeLeftMillis para segundos |
 | ToxicBirdSpecialEventMechanic.SendGetSecondsToEnd | `0x3035548` | Envia `hwn`, EventId=3 |
+| ToxicBirdSpecialEventMechanic.SendGetEventXp | `0x3035A44` | Envia `hwn`, EventId=7 |
 | ToxicBirdSpecialEventMechanic.Install | `0x30351F0` | Registra resposta `hwn` |
 | ToxicBirdSpecialEventMechanic.OnSpecialEventServerResponse | `0x30362CC` | Faz dispatch e lê Seconds do DTO |
+| EventPassModel.<>c__DisplayClass126_0.<UpdateEventXpPoints>b__0 | `0x1E7F518` | Lê XpReward e atualiza XP total, diário e limite antes do callback |
+| DailyGiftController.<>c.<Start>b__2_0 | `0x251C6D8` | Também exige XpReward não nulo |
 | ToxicBirdServer.GetReferralInfo | `0x23BF7C0` | Envia `referral`, EventId=0 omitido |
 | ToxicBirdServer.InstallReferralBehavior | `0x23B523C` | Registra resposta `N` |
 | ToxicBirdServer.HandleGetLinkInfoResponse | `0x23BF260` | Acessa Data e produz o callback de informação |
@@ -66,10 +85,11 @@ referem-se à lib de dezembro de 2023 fornecida pelo usuário.
 Os testes usam bytes literais dos contratos, cobrem os sete tipos de fila,
 tipos inválidos, mensagens truncadas e operações ainda sem implementação.
 O teste HTTP/TCP de integração autentica a conta, entra na sala, intercala as
-quatro consultas com analytics e movimento e verifica as respostas, o Pong e
+as consultas, incluindo GetXp=7, com analytics e movimento e verifica as respostas, o Pong e
 a preservação da conta/inventário. Pedidos anteriores ao login são recusados.
 
-`python tools/check_local_character.py` também verifica as quatro respostas
+`python tools/check_local_character.py` também verifica as respostas de XP e tempo
+separadamente, além das consultas de frutas, fila e indicação,
 contra o processo do servidor. A validação do processo inclui reiniciar com o
 mesmo banco temporário e conferir que UUID e nome continuam persistidos.
 

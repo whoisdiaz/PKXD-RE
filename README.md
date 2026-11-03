@@ -21,8 +21,9 @@ como habilitar logs na lib ARM64 com validação de hash e testar os JSONs do pk
 
 As consultas iniciais de `fruit`, `matchmaking`, `hwn` e `referral` agora
 recebem [respostas com os contratos do cliente](docs/entry_services_1_38_4.md):
-contagem de missões local zero, fila de minigame em espera, evento sazonal
-inativo e indicação sem link nem conversões. O diagnóstico TCP verifica essas
+contagem de missões local zero, fila de minigame em espera, XP/tempo sazonal
+zero e indicação sem link nem conversões. A consulta `hwn` de XP (operação 7)
+inclui o objeto `XpReward` exigido pelo cliente. O diagnóstico TCP verifica essas
 quatro respostas junto com a sala e a persistência do personagem.
 
 Para instalar no Termux:

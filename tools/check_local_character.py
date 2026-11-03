@@ -107,7 +107,8 @@ def check(host, port):
             raise ValueError("A sala não manteve a conexão após posição e camada")
         print("OK: sala local, consultas de veículos/pets, posição e camada sem desconexão")
         entry_queries = [("fruit", bytes.fromhex("0803"), "fruit-quest-count", b""),
-                         ("matchmaking", bytes.fromhex("08021003"), "matchmaking_lobby_state", b"\x18\x03"),
+                         ("matchmaking", bytes.fromhex("08021002"), "matchmaking_lobby_state", b"\x18\x02"),
+                         ("hwn", bytes.fromhex("0807"), "hwn", bytes.fromhex("08071200")),
                          ("hwn", bytes.fromhex("0803"), "hwn", b"\x08\x03"),
                          ("referral", b"", "N", bytes.fromhex("120408011a00"))]
         sock.sendall(b"".join(wire.frame(wire.event(name, body, room=True))
@@ -116,7 +117,7 @@ def check(host, port):
             packet = wire.receive(sock)
             if packet[0] != wire.ROOM_EVENT or wire.parse_event(packet) != (name, body):
                 raise ValueError("Consulta inicial de missão/fila/evento/indicação não confirmada")
-        print("OK: consultas locais de frutas, fila de minigame, evento sazonal e indicação")
+        print("OK: consultas locais de frutas, fila de minigame, XP/tempo sazonal e indicação")
         # These requests blocked the reported Android startup before profile creation.
         requests = [("time", b"", "time", None)]
         requests += [("store_tree", wire.string(2, store_id), "L", store_id) for store_id in STORE_IDS]

@@ -82,6 +82,12 @@ class StartupServices:
             # No seasonal event is active in this local world: Seconds=0.
             LOG.info("TCP seasonal event time sent seconds=0")
             return [("hwn", wire.number(1, 3))]
+        if name == "hwn" and event_id == 7:
+            # GetSpecialEventXPResponse: EventId=1, XpReward=2. Both the daily
+            # gift and event-pass callbacks dereference XpReward unconditionally.
+            # Include a present object even with no seasonal XP or local cap.
+            LOG.info("TCP seasonal XP sent total=0 today=0 cap=0")
+            return [("hwn", wire.number(1, 7) + wire.blob(2, b""))]
         if name == "referral" and event_id == 0:
             # ReferralLinkResponse.Data must be present. Query succeeds with
             # an empty ReferralLink object, zero counts and no converted users;

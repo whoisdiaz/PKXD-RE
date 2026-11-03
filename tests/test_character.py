@@ -265,7 +265,7 @@ class CharacterFlowTests(unittest.TestCase):
     def test_startup_data_cannot_be_requested_before_game_login(self):
         for name, payload in (("time", b""), ("fruit", b"\x08\x03"),
                               ("matchmaking", b"\x08\x02\x10\x03"),
-                              ("hwn", b"\x08\x03"), ("referral", b"")):
+                              ("hwn", b"\x08\x03"), ("hwn", b"\x08\x07"), ("referral", b"")):
             with self.subTest(name=name), socket.create_connection(self.game.server_address, timeout=3) as sock:
                 sock.sendall(wire.frame(b"\x03"))
                 wire.receive(sock)
@@ -278,17 +278,20 @@ class CharacterFlowTests(unittest.TestCase):
         self.bootstrap(sock, transport_id)
         before = self.store.user(user["userToken"])
         inventory = self.store.inventory(before["id"])
-        # Exact native request bodies; four previously unanswered domains,
+        # Native request bodies, including the observed lobby type 2 and XP
+        # request 7 from the Android log, plus the supported seasonal time query;
         # interspersed with one-way analytics and client position updates.
         requests = [("fruit", bytes.fromhex("0803")),
                     ("Analytics/sessionId", b"local-diagnostic"),
-                    ("matchmaking", bytes.fromhex("08021003")),
-                    ("hwn", bytes.fromhex("0803")), ("referral", b""),
+                    ("matchmaking", bytes.fromhex("08021002")),
+                    ("hwn", bytes.fromhex("0807")), ("referral", b""),
+                    ("hwn", bytes.fromhex("0803")),
                     ("C", bytes.fromhex("01ff3f800000400000004040000042b40000"))]
         sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True)) for name, payload in requests)
                      + wire.frame(b"\x01"))
-        expected = [("fruit-quest-count", b""), ("matchmaking_lobby_state", b"\x18\x03"),
-                    ("hwn", b"\x08\x03"), ("N", bytes.fromhex("120408011a00"))]
+        expected = [("fruit-quest-count", b""), ("matchmaking_lobby_state", b"\x18\x02"),
+                    ("hwn", bytes.fromhex("08071200")), ("N", bytes.fromhex("120408011a00")),
+                    ("hwn", b"\x08\x03")]
         for response in expected:
             packet = wire.receive(sock)
             self.assertEqual(packet[0], wire.ROOM_EVENT)
