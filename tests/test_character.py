@@ -125,7 +125,7 @@ class CharacterFlowTests(unittest.TestCase):
         joined = wire.receive(sock)
         self.assertEqual(joined, b"\x06\x01" + struct.pack(">ii", 1, transport_id))
         values = {}
-        for _ in range(11):
+        for _ in range(14):
             packet = wire.receive(sock)
             name, payload = wire.parse_event(packet)
             self.assertIn(name, ("tbulv", "tbugv"))
@@ -136,6 +136,8 @@ class CharacterFlowTests(unittest.TestCase):
             self.assertIn(("tbulv", key), values)
         self.assertEqual(values[("tbulv", "i")], b"\x03\x00")
         self.assertEqual(values[("tbulv", "s")], b"\x05")
+        self.assertEqual(values[("tbulv", "A")], b"\x02\x00\x00\x00\x00")
+        self.assertEqual(values[("tbulv", "I")], b"\x04\x00")
         return values
 
     def test_full_http_tcp_character_and_persistence(self):
@@ -171,7 +173,9 @@ class CharacterFlowTests(unittest.TestCase):
         self.assertEqual(user2["userId"], user["userId"])
         sock2, player_id2, response2 = self.tcp(user2["userToken"], reconnect=True)
         self.assertEqual((response2.integer(1), response2.integer(3)), (1, 0))
-        self.assertNotEqual(player_id, player_id2)
+        # Transport IDs belong to the room and may be reused after disconnect;
+        # the authenticated persistent UUID remains the account identity.
+        self.assertTrue(1 <= player_id2 <= 255)
         values2 = self.bootstrap(sock2, player_id2)
         self.assertEqual(values2[("tbulv", "j")], skin)
         self.assertEqual(values2[("tbulv", "m")], b"\x01CodexTeste")
@@ -281,9 +285,8 @@ class CharacterFlowTests(unittest.TestCase):
         _, _, user = self.account()
         sock, player_id, _ = self.tcp(user["userToken"])
         self.bootstrap(sock, player_id)
-        # Valid client framing for a non-cosmetic variable: it is rejected by
-        # policy without being misread as a record belonging to another user.
-        sock.sendall(wire.frame(wire.event("tbulv", bytes.fromhex("00000001680400"), room=True))
+        # Role remains server-owned; a denied write must not break framing.
+        sock.sendall(wire.frame(wire.event("tbulv", bytes.fromhex("00000001440200000001"), room=True))
                      + wire.frame(wire.event("tbulv", bytes.fromhex("000000016a05102030"), room=True)))
         name, payload = wire.parse_event(wire.receive(sock))
         self.assertEqual(name, "tbulv")
@@ -310,7 +313,7 @@ class CharacterFlowTests(unittest.TestCase):
         requests = [("hair_style", b""), ("lb", b""), ("fetch_events", b""),
                     ("init_pos", b""), ("init_day_night", b""), ("pet", b"\x08\x13"),
                     ("pet", b"\x08\x18"), ("pet", b"\x08\x06"),
-                    ("slot_interaction", b"\x08\x03" + wire.string(2, user["userId"])),
+                    ("slot_interaction", b"\x08\x03" + wire.string(3, user["userId"])),
                     ("tbulv", bytes.fromhex("000000016a05102030"))]
         sock.sendall(b"".join(wire.frame(wire.event(name, payload, room=True)) for name, payload in requests))
         responses = [wire.parse_event(wire.receive(sock)) for _ in range(8)]
@@ -321,6 +324,72 @@ class CharacterFlowTests(unittest.TestCase):
         self.assertEqual(wire.parse_variable(responses[7][1]), (player_id, "j", b"\x05\x10\x20\x30"))
         sock.sendall(wire.frame(b"\x01"))
         self.assertEqual(wire.receive(sock), b"\x02")
+
+    def test_world_startup_replay_position_and_layer_survive_keepalive(self):
+        _, _, user = self.account()
+        sock, transport_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, transport_id)
+        requests = [("slot_interaction", b"\x08\x02" + wire.string(3, user["userId"])),
+                    ("pet", b"\x08\x0d"), ("vhc", b""), ("vhc", b"\x08\x05"),
+                    ("C", bytes.fromhex("01ff3f800000400000004040000042b40000")),
+                    ("PL", bytes.fromhex("00000000003f800000400000004040000042b40000"))]
+        sock.sendall(b"".join(wire.frame(wire.event(name, body, room=True)) for name, body in requests)
+                     + wire.frame(b"\x01"))
+        replies = [wire.parse_event(wire.receive(sock)) for _ in range(4)]
+        self.assertEqual(replies, [("n", b""), ("pet", b"\x08\x13"), ("vhc", b"\x10\x01"), ("vhc", b"\x08\x05")])
+        self.assertEqual(wire.receive(sock), b"\x02")
+        with self.game.lock:
+            state = self.game.world_sessions[transport_id]
+        self.assertEqual((state.layer, state.sequence, state.position, state.movement_packets),
+                         (0, 0, (1., 2., 3., 90.), 2))
+        # Leaving removes transient room state while the account remains valid.
+        sock.sendall(wire.frame(bytes((wire.LEAVE,)) + wire.I32.pack(1)))
+        self.assertEqual(wire.receive(sock), b"\x07" + wire.I32.pack(1))
+        with self.game.lock:
+            self.assertNotIn(transport_id, self.game.world_sessions)
+        sock.sendall(wire.frame(bytes((wire.JOIN,)) + wire.I32.pack(1)))
+        self.bootstrap(sock, transport_id)
+        with self.game.lock:
+            self.assertIsNone(self.game.world_sessions[transport_id].position)
+        self.assertEqual(json.loads(self.store.user(user["userToken"])["cosmetics"]), {})
+
+    def test_runtime_flags_are_acknowledged_but_not_saved_as_cosmetics(self):
+        _, _, user = self.account()
+        sock, transport_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, transport_id)
+        value = b"\x04\x01"
+        sock.sendall(wire.frame(wire.event("tbulv", wire.client_variable_update("h", value), room=True)))
+        name, payload = wire.parse_event(wire.receive(sock))
+        self.assertEqual((name, wire.parse_variable(payload)), ("tbulv", (transport_id, "h", value)))
+        self.assertEqual(json.loads(self.store.user(user["userToken"])["cosmetics"]), {})
+        other, other_id, _ = self.tcp(user["userToken"])
+        self.assertNotEqual(other_id, transport_id)  # Both connections are live.
+        self.bootstrap(other, other_id)
+        with self.game.lock:
+            self.assertNotIn("h", self.game.world_sessions[other_id].variables)
+
+    def test_world_events_require_authentication_and_room_membership(self):
+        for name, body in (("C", bytes(18)), ("PL", bytes(21)), ("slot_interaction", b"\x08\x02")):
+            with socket.create_connection(self.game.server_address, timeout=3) as sock:
+                sock.sendall(wire.frame(b"\x03"))
+                wire.receive(sock)
+                sock.sendall(wire.frame(wire.event(name, body, room=True)))
+                self.assertEqual(sock.recv(1), b"")
+        _, _, user = self.account()
+        sock, transport_id, _ = self.tcp(user["userToken"])
+        self.bootstrap(sock, transport_id)
+        sock.sendall(wire.frame(bytes((wire.LEAVE,)) + wire.I32.pack(1)))
+        wire.receive(sock)
+        sock.sendall(wire.frame(wire.event("C", bytes(18), room=True)))
+        self.assertEqual(sock.recv(1), b"")
+
+    def test_room_transport_ids_are_recycled_without_overflowing_native_byte(self):
+        for _ in range(260):
+            with socket.create_connection(self.game.server_address, timeout=3) as sock:
+                sock.sendall(wire.frame(b"\x03"))
+                connected = wire.receive(sock)
+                transport_id = wire.I32.unpack(connected[1:5])[0]
+                self.assertTrue(1 <= transport_id <= 255)
 
     def test_backpack_initial_query_and_updates_use_success_oneof_and_preserve_ownership(self):
         _, _, user = self.account()

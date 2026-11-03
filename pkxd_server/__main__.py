@@ -13,7 +13,7 @@ from .version_policy import DEFAULT_CONFIG, load_policy
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Local accounts, lobby and character bootstrap for PK XD 1.38.4")
+    parser = argparse.ArgumentParser(description="Local accounts, characters and world sessions for PK XD 1.38.4")
     parser.add_argument("--host", default="127.0.0.1", help="HTTP bind address (default: loopback)")
     parser.add_argument("--port", type=int, default=8080, help="HTTP port")
     parser.add_argument("--game-host", default="127.0.0.1", help="Game destination advertised to the client")
@@ -44,9 +44,10 @@ def main():
         logging.info("PK XD %s: version %s; game protocol %s", policy.app_version,
                      "enabled" if policy.enabled else "disabled", policy.protocol)
         logging.info("Lobby HTTP: %s:%s", *server.server_address[:2])
-        logging.info("Game TCP: %s:%s (character bootstrap)", *game.server_address[:2])
+        logging.info("Game TCP: %s:%s (local world room)", *game.server_address[:2])
         logging.info("Local accounts and characters: %s", store.path)
         logging.info("Startup services: server time, empty local catalogs and initial lists")
+        logging.info("World: single-player rooms, movement/layers, interaction cache, vehicle queries")
         logging.info("Client metadata must redirect BOTH accounts and lobby to this server")
         game_thread = threading.Thread(target=game.serve_forever, daemon=True)
         game_thread.start()

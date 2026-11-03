@@ -88,6 +88,13 @@ class StartupContractTests(unittest.TestCase):
         self.assertEqual(self.handle("pet", bytes.fromhex("0818")), [("pet", bytes.fromhex("0820"))])
         self.assertIsNone(self.handle("lb", bytes.fromhex("0802")))  # Purchase is not supported.
 
+    def test_world_vehicle_queries_and_pet_evolution_use_native_response_schemas(self):
+        self.assertEqual(self.handle("vhc"), [("vhc", bytes.fromhex("1001"))])
+        self.assertEqual(self.handle("vhc", b"\x08\x05"), [("vhc", b"\x08\x05")])
+        self.assertEqual(self.handle("pet", b"\x08\x0d"), [("pet", b"\x08\x13")])
+        for purchase_or_spawn in (1, 6, 7):
+            self.assertIsNone(self.handle("vhc", wire.number(1, purchase_or_spawn)))
+
     def test_day_state_and_empty_position_snapshot_use_different_codecs(self):
         self.assertEqual(self.handle("init_day_night"), [("G", bytes.fromhex("1001"))])
         name, compressed = self.handle("init_pos")[0]

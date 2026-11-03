@@ -1,12 +1,19 @@
 # PK XD — engenharia reversa
 
-## Etapa 2: contas e personagem local para 1.38.4
+## Etapa 3: sala local e estado do personagem para 1.38.4
 
 O servidor inicia contas anônimas e lobby em HTTP `127.0.0.1:8080`, além da
 conexão TCP `127.0.0.1:7000` para login e criação do perfil. Salva nome, roupa,
 cor de pele e cabelo em SQLite. A versão **1.38.4**, protocolo `0.2.49`, vem
 habilitada em [`config/versions.json`](config/versions.json).
 Usa Python e biblioteca padrão, sem instalar pacotes pelo pip.
+
+A sala individual agora recebe posição e rotação (`C`), mudanças de camada
+(`PL`) e estados temporários do personagem. Responde ao cache de interação,
+às listas de veículos próprios/no mundo e à tabela de evolução de pets.
+A cena e o ponto de nascimento são carregados pelo próprio APK. O resultado
+visual dessa etapa ainda precisa de teste no Android; os contratos e limites
+estão em [Mundo e sala local](docs/world_1_38_4.md).
 
 Para instalar no Termux:
 
@@ -29,7 +36,8 @@ python tools/check_local_character.py
 ```
 
 O diagnóstico cria um jogador de teste e verifica cadastro, login, horário,
-catálogos de inicialização, inventário, favoritos, nome e reconexão.
+catálogos de inicialização, inventário, favoritos, nome, posição/camada da sala
+e reconexão.
 A alocação exige um token emitido pelas contas locais;
 `userToken: "local-test"` deixa de ser um teste válido do servidor completo.
 
@@ -47,16 +55,17 @@ Para desabilitar a versão, altere `enabled` para `false` em
 protocolo, então outras builds que compartilhem `0.2.49` não podem ser
 distintas por esse pedido sozinho.
 
-Esta etapa oferece uma sala isolada de inicialização e o perfil persistente.
+Esta etapa oferece uma sala local individual e o perfil persistente.
 Inclui respostas de horário, árvores de loja vazias e consultas iniciais de
 amigos, pets, NPCs e cache de variáveis. O inventário inicial local contém nove
 itens padrão identificados em AvatarUtils; quantidades e favoritos ficam no SQLite.
 Os logs enviados do Android confirmaram
 cadastro, sessões, alocação e login TCP; a correção das etapas de inicialização
 ainda precisa de novo teste no aparelho.
-Mundo jogável, catálogo completo de produtos, casas, tutorial completo e demais
-mecânicas continuam para as próximas partes. O teste automatizado usa um
-cliente de protocolo; a tela de criação do personagem ainda depende de teste no Android.
+Sala compartilhada entre jogadores, catálogo completo de produtos, casas,
+tutorial completo e demais mecânicas continuam pendentes. O teste automatizado
+usa um cliente de protocolo; a entrada visual no mundo ainda depende de teste
+no Android.
 O login TCP verifica a versão do aplicativo, além da verificação de protocolo
 no lobby.
 

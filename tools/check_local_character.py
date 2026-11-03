@@ -5,6 +5,7 @@ import http.client
 import json
 import secrets
 import socket
+import struct
 import sys
 import time
 from pathlib import Path
@@ -52,9 +53,9 @@ def check(host, port):
                 raise ValueError("Login TCP recusado")
             if wire.receive(sock)[0] != 6:
                 raise ValueError("A sala inicial não chegou")
-            expected = {"p", "o", "wa", "j", "s", "i", "hs", "k", "m"}
+            expected = {"p", "o", "wa", "j", "s", "i", "hs", "k", "m", "A", "I", "r"}
             received = set()
-            for _ in range(11):
+            for _ in range(14):
                 name, payload = wire.parse_event(wire.receive(sock))
                 if name == "tbulv":
                     _, key, value = wire.parse_variable(payload)
@@ -82,6 +83,23 @@ def check(host, port):
         if name != "tbulv" or wire.parse_variable(payload) != (transport_id, "j", skin):
             raise ValueError("Atualização de variável no formato nativo não confirmada")
         print("OK: atualização de variável no formato nativo sem desconexão")
+        # The client chooses its spawn from the Unity scene. Use synthetic finite
+        # coordinates only to verify server reception, not to claim an APK spawn.
+        world_requests = [("slot_interaction", wire.number(1, 2) + wire.string(3, user["userId"])),
+                          ("pet", wire.number(1, 13)), ("vhc", b""), ("vhc", wire.number(1, 5))]
+        for event_name, body in world_requests:
+            sock.sendall(wire.frame(wire.event(event_name, body, room=True)))
+        expected_world = [("n", b""), ("pet", b"\x08\x13"), ("vhc", b"\x10\x01"), ("vhc", b"\x08\x05")]
+        for expected in expected_world:
+            if wire.parse_event(wire.receive(sock)) != expected:
+                raise ValueError("Resposta de inicialização da sala inválida")
+        for event_name, body in (("C", struct.pack(">BBffff", 1, 255, 1., 2., 3., 90.)),
+                                 ("PL", struct.pack(">iBffff", 0, 0, 1., 2., 3., 90.))):
+            sock.sendall(wire.frame(wire.event(event_name, body, room=True)))
+        sock.sendall(wire.frame(bytes((wire.PING,))))
+        if wire.receive(sock) != bytes((wire.PONG,)):
+            raise ValueError("A sala não manteve a conexão após posição e camada")
+        print("OK: sala local, consultas de veículos/pets, posição e camada sem desconexão")
         # These requests blocked the reported Android startup before profile creation.
         requests = [("time", b"", "time", None)]
         requests += [("store_tree", wire.string(2, store_id), "L", store_id) for store_id in STORE_IDS]

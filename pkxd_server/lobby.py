@@ -146,6 +146,8 @@ class LobbyHandler(BaseHTTPRequestHandler):
             "gameTransportImplemented": self.server.game is not None,
             "anonymousAccountsImplemented": self.server.store is not None,
             "characterBootstrapImplemented": self.server.game is not None,
+            "worldSessionImplemented": self.server.game is not None,
+            "sharedRoomsImplemented": False,
             "worldImplemented": False,
         })
 

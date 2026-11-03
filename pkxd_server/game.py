@@ -1,8 +1,4 @@
-"""Single-player account/character bootstrap for ToxicBird protocol 0.2.49.
-
-This listener does not implement the world simulation or its gameplay services.
-"""
-import itertools
+"""Local accounts, characters and single-player world sessions for ToxicBird."""
 import json
 import logging
 import secrets
@@ -10,11 +6,13 @@ import socket
 import socketserver
 import struct
 import threading
+import time
 
 from .accounts import AccountError
 from .avatar_defaults import DEFAULT_EQUIPPED_ITEMS
 from .inventory import InventoryServices
 from .startup import REQUESTS, StartupServices
+from .world import INITIAL_VARIABLES, REQUESTS as WORLD_REQUESTS, LocalWorldSession
 from . import wire
 
 LOG = logging.getLogger(__name__)
@@ -29,7 +27,9 @@ class GameServer(socketserver.ThreadingTCPServer):
         self.store, self.policy = store, policy
         self.startup = StartupServices()
         self.inventory = InventoryServices(store)
-        self.ids = itertools.count(1)
+        # Native movement notifications use a one-byte room user ID.
+        self.available_ids = set(range(1, 256))
+        self.world_sessions = {}
         self.lock = threading.Lock()
         self.connections = set()
         self.slots = threading.BoundedSemaphore(32)
@@ -83,9 +83,12 @@ class GameHandler(socketserver.BaseRequestHandler):
         self.request.settimeout(15)
         self.player = None
         self.joined = False
+        self.world = None
+        started = time.monotonic()
         opcode, name = None, None
         with self.server.lock:
-            self.transport_id = next(self.server.ids)
+            self.transport_id = min(self.server.available_ids)
+            self.server.available_ids.remove(self.transport_id)
         try:
             first = wire.receive(self.request)
             if first[0] not in (wire.CONNECT, wire.RECONNECT):
@@ -132,6 +135,15 @@ class GameHandler(socketserver.BaseRequestHandler):
                         response = self.server.inventory.backpack(payload, player_id=self.player["id"])
                         if response is not None:
                             self.emit("backpack", response, room=True)
+                    elif opcode == wire.ROOM_EVENT and name in WORLD_REQUESTS:
+                        if not self.joined:
+                            raise wire.ProtocolError("Room required")
+                        responses = self.world.handle(name, payload)
+                        if responses is None:
+                            LOG.info("TCP unsupported world request name=%s", json.dumps(name))
+                        else:
+                            for response_name, response_payload in responses:
+                                self.emit(response_name, response_payload, room=True)
                     elif opcode == wire.ROOM_EVENT and name in REQUESTS:
                         if not self.joined:
                             raise wire.ProtocolError("Room required")
@@ -151,11 +163,11 @@ class GameHandler(socketserver.BaseRequestHandler):
                     if self.player is None or len(packet) != 5:
                         raise wire.ProtocolError("Invalid room request")
                     if wire.I32.unpack(packet[1:])[0] != ROOM_ID:
-                        raise wire.ProtocolError("Only the character bootstrap room exists")
+                        raise wire.ProtocolError("Unknown local world room")
                     if opcode == wire.JOIN:
                         self.join()
                     else:
-                        self.joined = False
+                        self.leave()
                         self.send(bytes((7,)) + wire.I32.pack(ROOM_ID))
                 else:
                     raise wire.ProtocolError("Unsupported opcode")
@@ -172,6 +184,20 @@ class GameHandler(socketserver.BaseRequestHandler):
                      opcode, json.dumps(name[:64]) if name else "none")
         except OSError:
             LOG.info("TCP connection closed")
+        finally:
+            if self.world is not None:
+                LOG.info("TCP world session ended; positionReceived=%s movementPackets=%d durationSeconds=%d",
+                         str(self.world.position is not None).lower(), self.world.movement_packets,
+                         int(time.monotonic() - started))
+            self.leave()
+            with self.server.lock:
+                self.server.available_ids.add(self.transport_id)
+
+    def leave(self):
+        self.joined = False
+        with self.server.lock:
+            self.server.world_sessions.pop(self.transport_id, None)
+        self.world = None
 
     def login(self, payload):
         request = wire.Proto(payload)
@@ -196,10 +222,14 @@ class GameHandler(socketserver.BaseRequestHandler):
         if self.joined:
             return
         self.joined = True
-        # Each connection currently has an isolated bootstrap room, containing itself.
+        # One isolated local world per connection; no shared-room broadcasts yet.
+        self.world = LocalWorldSession(self.player["user_id"], self.transport_id)
+        with self.server.lock:
+            self.server.world_sessions[self.transport_id] = self.world
         self.send(bytes((6, 1)) + wire.I32.pack(ROOM_ID) + wire.I32.pack(self.transport_id))
         self.bootstrap()
         LOG.info("TCP character bootstrap sent")
+        LOG.info("TCP local world room joined; waiting for client scene and position")
 
     def set_variable(self, key, value, *, global_variable=False):
         self.emit("tbugv" if global_variable else "tbulv",
@@ -224,6 +254,7 @@ class GameHandler(socketserver.BaseRequestHandler):
         }
         values.update({k: bytes.fromhex(v) for k, v in json.loads(player["cosmetics"]).items()
                        if not (k == "o" and v == "06")})
+        values.update(INITIAL_VARIABLES)
         for key, value in values.items():
             self.set_variable(key, value)
         for key in ("k", "m"):
@@ -234,6 +265,10 @@ class GameHandler(socketserver.BaseRequestHandler):
         # UserVariable.Serialize (0x3A86404) omits UserId on client writes.
         # Server notifications add it back for UserVariable.Deserialize.
         key, value = wire.parse_client_variable_update(payload)
+        if self.world.set_runtime_variable(key, value):
+            self.set_variable(key, value)
+            LOG.info("TCP world runtime variable updated key=%s", json.dumps(key))
+            return
         valid = ((key == "j" and len(value) == 4 and value[0] == 5)
                  or (key == "hs" and len(value) == 5 and value[0] == 2
                      and 0 <= wire.I32.unpack(value[1:])[0] <= 1000000)
@@ -241,7 +276,8 @@ class GameHandler(socketserver.BaseRequestHandler):
                      and len(value) <= 1 + 32 * 4
                      and all(0 <= item[0] <= 1000000 for item in struct.iter_unpack(">i", value[1:]))))
         if not valid:
-            LOG.info("TCP user variable rejected: unsupported key or value")
+            LOG.info("TCP user variable rejected key=%s type=%d bytes=%d",
+                     json.dumps(key) if len(key) <= 4 else "unknown", value[0], len(value))
             return
         self.server.store.save_cosmetic(self.player["id"], key, value)
         self.set_variable(key, value)

@@ -41,7 +41,9 @@ o próximo contrato necessário. Não é preciso enviar o APK inteiro de antemã
 
 O pacote não altera certificados, assinaturas, Firebase ou URLs de assets.
 A tela real e a disponibilidade dos assets de 2023 precisam de teste no aparelho.
-O mundo jogável é outra etapa. Veja [contratos e limites](../docs/character_1_38_4.md).
+O servidor tem uma [etapa de sala local e movimento](../docs/world_1_38_4.md),
+cujo resultado visual ainda precisa ser testado no aparelho. Ela usa este mesmo
+metadata, preservando o APK que já se conecta às contas e ao lobby.
 
 O pacote foi gerado somente para o metadata enviado neste projeto. Seus hashes
 e os três índices modificados estão em [account-manifest.json](account-manifest.json).

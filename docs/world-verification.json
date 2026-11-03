@@ -1,0 +1,67 @@
+{
+  "appVersion": "1.38.4",
+  "protocolVersion": "0.2.49",
+  "reportedAndroidBaseCommit": "194b769",
+  "reportedAndroid": {
+    "accountAndLobbyConnected": true,
+    "inventoryStagePassed": true,
+    "clientPositionEventObserved": true,
+    "clientPositionPayloadBytes": 18,
+    "unhandledPetRequestId": 13,
+    "unhandledVehicleEventObserved": true,
+    "lastLog": "TCP disconnected",
+    "exactUnityExceptionKnown": false,
+    "measuredTimeUntilReturnToLogin": null
+  },
+  "automatedTests": {
+    "command": "python -m unittest discover -s tests -q",
+    "passed": 75,
+    "failed": 0,
+    "includesHttpTcpIntegration": true,
+    "includes260ConnectionsToCheckByteSizedIds": true,
+    "includesExitRejoinStateCleanup": true,
+    "includesAuthenticationAndOwnership": true,
+    "includesSyntheticMovementAndSequenceWrap": true
+  },
+  "processSmoke": {
+    "diagnosticAgainstServerProcessPassed": true,
+    "worldQueriesMovementAndKeepalivePassed": true,
+    "profileSurvivedProcessRestart": true,
+    "sigintExitCode": 0,
+    "tokensAbsentFromLogs": true
+  },
+  "nativeEvidence": {
+    "clientPositionSerializerRva": "0x2DE3004",
+    "clientLayerSerializerRva": "0x2DE3194",
+    "clientPositionPayloadFormat": "teleported byte + sequence byte + four float32 BE",
+    "clientLayerPayloadFormat": "layer int32 BE + sequence byte + four float32 BE",
+    "positionRequestHex": "01ff3f800000400000004040000042b40000",
+    "layerRequestHex": "00000064003f800000400000004040000042b40000",
+    "slotCacheRequestRva": "0x23C06E4",
+    "slotCacheRequestUserField": 3,
+    "slotResponseEvent": "n",
+    "vehicleResponseDispatchRva": "0x303CC10",
+    "getVehiclesSuccessfulField": 2,
+    "initializeVehiclesResponseId": 5,
+    "petEvolutionRequestId": 13,
+    "petEvolutionResponseId": 19,
+    "onboardingSpawnStepRva": "0x2EBD4B8",
+    "squareSpawnStepRva": "0x2EBC0D8"
+  },
+  "implementedScope": {
+    "singlePlayerWorldSession": true,
+    "positionRotationAndLayerReception": true,
+    "transientLogicalVariables": true,
+    "interactionSlotCache": true,
+    "emptyVehicleQueries": true,
+    "emptyPetEvolutionTable": true,
+    "sharedRoomsAndBroadcasts": false,
+    "houseService": false,
+    "completeProductionCatalog": false,
+    "sceneAndSpawnTransformsLoadedByApk": true,
+    "serverPhysicsAndMapSimulation": false
+  },
+  "databaseSchemaChanged": false,
+  "clientMetadataChanged": false,
+  "androidVisualWorldEntryAfterThisChange": "pending user retest"
+}

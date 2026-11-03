@@ -12,6 +12,9 @@ e StoreTreeInitStep. A [correção de inicialização](startup_1_38_4.md) implem
 as respostas dessas etapas e consultas iniciais; seu resultado na tela precisa
 ser verificado no aparelho.
 
+A etapa seguinte adiciona [sala local, movimento e consultas do mundo](world_1_38_4.md).
+O resultado visual após essa atualização ainda precisa de teste no APK.
+
 ## Termux
 
 Pare a instância anterior com Ctrl+C e execute:
@@ -86,7 +89,8 @@ IsOnboarding 4, OnBoardingCompletedSteps 5. Token e appVersion `1.38.4` são
 verificados. Como regra local inicial, novo perfil permanece ativo até o primeiro
 nome; nenhum passo de tutorial é enviado como ficticiamente concluído.
 
-Cada conexão possui sala isolada de inicialização contendo o próprio jogador.
+Cada conexão possui sala individual contendo o próprio jogador. A sala agora
+mantém posição, camada e estado transitório, conforme [etapa 3](world_1_38_4.md).
 Nas notificações servidor → cliente, `tbulv` leva player ID int32 BE, tamanho da
 chave int32 BE, chave ASCII e valor tipado. Na escrita cliente → servidor, o ID
 é omitido: o dono vem da conexão autenticada. Isso foi corrigido ao comparar
@@ -143,6 +147,7 @@ oficial armazenado, assets de 2023 indisponíveis ou outros serviços pendentes
 precisam ser identificados no aparelho. Os testes do servidor não comprovam
 que o carregamento na tela foi resolvido.
 
-Ficam para próximas partes: mundo/sincronização, casas, catálogo completo de produtos,
+Ficam para próximas partes: salas compartilhadas/sincronização entre jogadores,
+casas, catálogo completo de produtos,
 tutorial completo, economia, compras e contas por e-mail. Eventos ausentes são
 registrados como `unsupported`; não recebem sucesso genérico.

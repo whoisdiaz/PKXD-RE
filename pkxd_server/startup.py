@@ -23,7 +23,7 @@ PET_STORE_ID = "eggs-store-0_1_86"
 CATALOG_VERSION = "local-bootstrap-1"
 REQUESTS = frozenset(("time", "store_tree", "pet_store_tree", "friends", "pet",
                       "npc/fetch-owned", "game_variable", "Analytics/sessionId", "Analytics/deviceId",
-                      "hair_style", "lb", "init_day_night", "init_pos", "fetch_events"))
+                      "hair_style", "lb", "init_day_night", "init_pos", "fetch_events", "vhc"))
 
 
 def empty_tree(store_id):
@@ -73,6 +73,16 @@ class StartupServices:
             # LootBoxInfoResponseMessage.Successful is field 3, not field 1.
             LOG.info("TCP initial loot box catalog sent count=0")
             return [("lb", wire.number(3, True))]
+        if name == "vhc":
+            if event_id == 0:
+                # GetVehiclesResponse: EventId=0, IsSuccess=2, Vehicles=3.
+                LOG.info("TCP owned vehicle inventory sent count=0")
+                return [("vhc", wire.number(2, True))]
+            if event_id == 5:
+                # InitializeVehiclesResponse has no success flag; its list is 2.
+                LOG.info("TCP world vehicle list sent count=0")
+                return [("vhc", wire.number(1, 5))]
+            return None
         if name == "init_day_night" and not request.fields:
             # DayNightStateResponse: day=false (default), SkipInterpolation=2.
             LOG.info("TCP initial day/night state sent night=false")
@@ -128,6 +138,8 @@ class StartupServices:
                 reply = wire.number(1, 8) + wire.number(2, True)
             elif event_id == 6:  # GetCache -> GetPetsCacheResponse.
                 reply = wire.number(1, 7)
+            elif event_id == 13:  # GetPetEvolutionTable -> response event 19.
+                reply = wire.number(1, 19)
             elif event_id == 16:  # GetPetNeedsRequest -> PetNeedDataResponse.
                 if request.text(2) not in ("", user_id):
                     LOG.info("TCP unsupported remote pet needs lookup")
